@@ -63,8 +63,8 @@ outputCompiled <- foreach(i = seq_along(x), .combine = "rbind") %dopar% {# seq_a
     
     ## fetching outputs
     harv <- get(load(paste(outputFolder, x[i], sep="/")))
-   
-     ## compiling realized area burned
+    
+    ## compiling realized area burned
     
     areaHarvested <- t(zonal(harv, uaf,  "sum")[,-1]) * convFactor
     areaHarvested <- data.frame(areaHarvested, total = apply(areaHarvested, 1, "sum"))
