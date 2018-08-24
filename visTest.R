@@ -3,19 +3,15 @@
 ### Random Forest prediction test - visualisation of outputs
 ####################################################################
 ####################################################################
-####################################################################
-rm(list=ls())
-#options()$encoding
-#options(encoding = "UTF-8")
-#Sys.setlocale(locale="French_Canada")
-####################################################################
-####################################################################
-#setwd("~/Travail/SCF/regenFailureRiskAssessment_phase2/")
-setwd("C:/Users/cyrdo/Travail/ECCC/regenFailureRiskAssessment_phase2/")
-wwd <- paste(getwd(), Sys.Date(), sep="/")
+rm(list = ls())
+home <- path.expand("~")
+home <- gsub("/Documents", "", home) # necessary on my Windows machine
+setwd(paste(home, "Sync/Travail/ECCC/regenFailureRiskAssessment_phase2", sep ="/"))
+####################################################################################################
+####################################################################################################
+wwd <- paste(getwd(), Sys.Date(), sep = "/")
 dir.create(wwd)
 setwd(wwd)
-rm(wwd)
 
 require(tidyr)
 require(ggplot2)

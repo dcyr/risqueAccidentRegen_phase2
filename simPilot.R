@@ -22,6 +22,7 @@ require(dplyr)
 print(paste0("Preparing INITIAL CONDITIONS: ", normalizePath("../"), "initRasterPrep.R"))
 source("../initRasterPrep.R")
 tsdInit <- tsd
+densInit <- dens
 ####################################################################################################
 ####################################################################################################
 
@@ -34,19 +35,20 @@ simStartYear <- 2015
 ## Reading management scenarios
 print(paste0("Preparing MANAGEMENT SCENARIOS from source file: ", normalizePath("../"), "initHarvest.R"))
 source("../initHarvest.R")
+save(managementPlan, file = "managementPlan.RData")
 
 ## Loading fire regime(s)
 fireRegime <- read.csv("../data/fireRegime_baseline.csv")
-
+write.csv(fireRegime, file = "fireRegime_baseline.csv", row.names = F)
 ## Sourcing fire engine
 source("../initFireRegime.R")
 
-## something about the regeneration model here
-####################################################################################################
+## Loading regeneration module
+source("../scripts/regenDensityPredictFnc.R")
+
 
 
 ### actual simulation
-
 require(doSNOW)
 #require(parallel)
 clusterN <-  40#max(1, floor(0.98*detectCores()))  ### choose number of nodes to add to cluster.
@@ -55,7 +57,7 @@ clusterN <-  40#max(1, floor(0.98*detectCores()))  ### choose number of nodes to
 outputDir <-  paste(getwd(), "output/", sep = "/")
 dir.create(outputDir)
 
-cl = makeCluster(clusterN, outfile = "") ## 
+cl = makeCluster(clusterN, outfile = "") ##
 registerDoSNOW(cl)
 
 foreach(i = 0:(nRep-1),
@@ -71,10 +73,10 @@ foreach(i = 0:(nRep-1),
     print("##############################################################")
     
     harvestScenario <- "baseline"
-    tsd <- tsdInit    
+    tsd <- tsdInit
+    dens <- densInit
+    
     ### preparing management plan inputs
-    
-    
     plan <- managementPlan[[harvestScenario]]
     
     ## eligible to harvest
@@ -120,11 +122,11 @@ foreach(i = 0:(nRep-1),
     names(uR) <- names(spEligible) <- names(matThresh) <- plan$uaf
     
     
-    fire <- harv <- age <- list()
+    fire <- harv <- age <- density <- list()
     
     for (y in 1:simDuration) {### change into foreach, and return 'fire' 'harv' and 'age' as a list, then reformat
         
-        ### simulating fire
+        ####################### simulating fire
         
         f <- simFire(tsfInit = tsd, simDur = 1, yearInit = simStartYear + y,
                      fireZones = fireZones,
@@ -132,23 +134,38 @@ foreach(i = 0:(nRep-1),
                      fireSizeFit = fireSizeFit,
                      fireSizeMax = fireSizeMax,
                      id = simID)
-        # ### saving yearly timesteps for testing purposes
-        # save(f, file = paste0(outputDir, "f_", y, ".RData"))
-        
+
         f <- f$tsf == 0
         f[!f] <- NA
         fire[[y]] <- f
         
+
         
-        ####################### updating tsd
+        ####################### simulating regeneration density
+        
+        # focusing on burned cells that are located in study are and 
+        index <- which(values(f & studyArea &
+                                  dens %in% dens_RAT[which(dens_RAT$value %in% densProd), "ID"]))
+        
+        if(length(index)>0) {
+            a <- dens[index]
+            b <- tsd[index]
+            c <- coverTypes[index]
+            
+            newDens <- regenDensityPredict(dens = a,
+                                           tsd = b,
+                                           coverTypes = c,
+                                           dens_RAT = dens_RAT,
+                                           coverTypes_RAT = coverTypes_RAT)
+            
+            dens[index] <- newDens 
+        }
+        
+        density[[y]] <- dens
+        
+        
+        ####################### updating tsd (do after updating density)
         tsd[f] <- 0
-        
-        ### updating density (or other variable)
-        
-        ###########
-        
-        
-        
         
         
         ####################### simulating harvest
@@ -159,7 +176,9 @@ foreach(i = 0:(nRep-1),
         h[] <- NA
         ## eligible to harvest at a given timestep
         #####
-        eligible <- tsd > matThresh
+        eligible <- tsd > matThresh &
+            dens %in% dens_RAT[which(dens_RAT$value %in% densProd), "ID"]  ## 
+        
         x <- numeric() ## vector of cells to be harvested
 
         for (u in plan$uaf) {
@@ -214,11 +233,12 @@ foreach(i = 0:(nRep-1),
     fire <- stack(fire)
     harv <- stack(harv)
     age <- stack(age)
-    
+    density <- stack(density)
 
     save(fire, file = paste0(outputDir, "outputFire_", str_pad(i, nchar(nRep-1), pad = "0"), ".RData"))
     save(harv, file = paste0(outputDir, "outputHarvest_", str_pad(i, nchar(nRep-1), pad = "0"), ".RData"))
     save(age, file = paste0(outputDir, "outputTSD_", str_pad(i, nchar(nRep-1), pad = "0"), ".RData"))
+    save(density, file = paste0(outputDir, "outputDensity_", str_pad(i, nchar(nRep-1), pad = "0"), ".RData"))
     
     print("##############################################################")
     print("##############################################################")
