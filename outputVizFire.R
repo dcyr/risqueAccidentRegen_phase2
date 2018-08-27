@@ -2,13 +2,11 @@
 ###################################################################################################
 ##### Visualizing fire simulations
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
-rm(list = ls())
-setwd("D:/regenFailureRiskAssessmentData_phase2/2018-08-23")
-####################################################################################################
-####################################################################################################
-wwd <- paste(getwd(), Sys.Date(), sep = "/")
-dir.create(wwd)
-setwd(wwd)
+rm(list = ls()[-which(ls() %in% c("sourceDir"))])
+# setwd("D:/regenFailureRiskAssessmentData_phase2/2018-08-23")
+# wwd <- paste(getwd(), Sys.Date(), sep = "/")
+# dir.create(wwd)
+# setwd(wwd)
 #################
 #require(rgdal)
 require(raster)
@@ -127,137 +125,134 @@ print(m + theme_dark() +
 dev.off()
 
 
-####################################################################################################
-####################################################################################################
-######
-###### Visualizing one realisation
-################################
-require(rgdal)
-require(rgeos)
-require(raster)
-require(maptools)
-require(ggplot2)
-
-fireZonesP <- get(load("../fireZonesP.RData"))
-studyAreaP <- get(load("../studyAreaP.RData"))
-
-### cropping 20 km to remove 'border effect'
-extentFig <- extent(fireZones)
-extentFig[c(1,3)] <- extentFig[c(1,3)]+20000
-extentFig[c(2,4)] <- extentFig[c(2,4)]-20000
-
-fireZones <- crop(fireZones, extentFig)
-fireZonesP <- crop(fireZonesP, extentFig)
-studyAreaP <- crop(studyAreaP, extentFig)
-tsdInit <-  raster("../tsd.tif")
-
-fireZonesF <- fortify(fireZonesP)
-studyAreaF <- fortify(studyAreaP)
-
-
-
-################################
-
-fire <- get(load("../output/outputFire_008.RData"))
-#output <- get(load("simOutput_002.RData"))
-
-
-
-require(raster)
-require(stringr)
-require(ggplot2)
-
-fTitle <- character()
-for (l in 1:nlayers(fire)) {
-    if(l == 1) {
-        tsd <- tsdInit
-        tsd[!is.na(tsd)] <- 100
-        tsd <- crop(tsd, extentFig)
-        rNA <- is.na(tsd)
-        rNA[rNA == 0] <- NA
-        rNA <- rasterToPoints(rNA)
-        rNA[,3] <- NA
-        maxVal <- max(values(tsd), na.rm = T) + nlayers(fire)
-        
-    }
-    options(scipen=999)
-
-    ### data to plot
-    r <- fire[[l]]
-    r <- crop(r, extentFig)
-    tsd[r==1] <- 0
-    tsd[tsd>150] <- 150
-    
-    
-    df <- rasterToPoints(tsd)
-    if(l == 1) {
-        colnames(rNA)[3] <- colnames(df)[3]
-    }
-    #
-    df <- rbind(df, data.frame(rNA))
-
-    ### plotting parameters
-    pWidth  <- 1400
-    pHeight <- 1200
-    pointsize <- 8
-    
-    colValues <- c(0, 10, 25, 50, maxVal)
-    #cols = c("red", "orange", "gold2", "seagreen4", "darkgreen")
-    cols = c("red", "orange", "gold2", "forestgreen", "darkgreen")
-
-    ### plotting
-    p <- ggplot(data = df, aes_string("x", "y", fill = colnames(df)[3])) +
-        theme_bw() +
-        #theme(legend.position="top", legend.direction="horizontal") +
-        geom_raster() +
-        coord_fixed() +
-        scale_fill_gradientn(name = "Time since last fire (years)", #limits = c(0,1),
-                             colours = cols,
-                             values = colValues/maxVal, limits = c(0,maxVal),
-                             na.value = "dodgerblue1") +
-        #coord_fixed(ratio = figRatio) +
-        geom_polygon(aes(x = long, y = lat, group = group), data = fireZonesF,
-                     colour = 'black', fill = NA, alpha = 0.5, size = 0.5) +
-        geom_polygon(aes(x = long, y = lat, group = group), data = studyAreaF,
-                     colour = 'white', fill = NA, size = 1) +
-        labs(x = "\nx (UTM 18)",
-              y = "y (UTM 18)\n") +
-        theme(legend.position="top", legend.direction="horizontal") +
-        annotate("text", x = max(df$x), y = max(df$y)+2500,
-                 label = paste("année", l),
-                 hjust = 1, vjust = 0, size = 0.3*pointsize, fontface = 2)
-
-    f <- paste0("tsfTest_" , str_pad(l, nchar(nlayers(fire)), pad = "0"),".png")
-    fTitle <- append(fTitle, f)
-
-    png(filename = f,
-        width = pWidth, height = pHeight, units = "px", res = 300, pointsize = pointsize,
-        bg = "white")
-
-        print(p + theme(plot.title = element_text(size = rel(0.6)),
-                        axis.title.x = element_text(size = rel(0.5)),
-                        axis.title.y = element_text(size = rel(0.5)),
-                        axis.text.x = element_text(size = rel(0.5)),
-                        axis.text.y =  element_text(size = rel(0.5), angle = 90, hjust = 0.5),
-                        legend.title = element_text(size = rel(0.75)),
-                        legend.text = element_text(size = rel(0.5))))
-
-    dev.off()
-    
-    ## aging landscape
-    tsd <- tsd + 1
-   # return(fTitle)
-}
-
-require(animation)
-oopt = ani.options(ani.dev="png", ani.type="png",
-                   interval = 0.3, autobrowse = FALSE)
-
-
-im.convert(c(fTitle, rep(fTitle[length(fTitle)], 10)), output = "tsfExample.gif",
-           extra.opts = "", clean = F)
-####################################################################################################
+# ####################################################################################################
+# ####################################################################################################
+# ######
+# ###### Visualizing one realisation
+# ################################
+# require(rgdal)
+# require(rgeos)
+# require(raster)
+# require(maptools)
+# require(ggplot2)
+# 
+# fireZonesP <- get(load("../fireZonesP.RData"))
+# studyAreaP <- get(load("../studyAreaP.RData"))
+# 
+# ### cropping 20 km to remove 'border effect'
+# extentFig <- extent(fireZones)
+# extentFig[c(1,3)] <- extentFig[c(1,3)]+20000
+# extentFig[c(2,4)] <- extentFig[c(2,4)]-20000
+# 
+# fireZones <- crop(fireZones, extentFig)
+# fireZonesP <- crop(fireZonesP, extentFig)
+# studyAreaP <- crop(studyAreaP, extentFig)
+# tsdInit <-  raster("../tsd.tif")
+# 
+# fireZonesF <- fortify(fireZonesP)
+# studyAreaF <- fortify(studyAreaP)
+# 
+# 
+# 
+# ################################
+# 
+# fire <- get(load("../output/outputFire_008.RData"))
+# #output <- get(load("simOutput_002.RData"))
+# 
+# 
+# 
+# require(raster)
+# require(stringr)
+# require(ggplot2)
+# 
+# fTitle <- character()
+# for (l in 1:nlayers(fire)) {
+#     if(l == 1) {
+#         tsd <- tsdInit
+#         tsd[!is.na(tsd)] <- 100
+#         tsd <- crop(tsd, extentFig)
+#         rNA <- is.na(tsd)
+#         rNA[rNA == 0] <- NA
+#         rNA <- rasterToPoints(rNA)
+#         rNA[,3] <- NA
+#         maxVal <- max(values(tsd), na.rm = T) + nlayers(fire)
+#         
+#     }
+#     options(scipen=999)
+# 
+#     ### data to plot
+#     r <- fire[[l]]
+#     r <- crop(r, extentFig)
+#     tsd[r==1] <- 0
+#     tsd[tsd>150] <- 150
+#     
+#     
+#     df <- rasterToPoints(tsd)
+#     if(l == 1) {
+#         colnames(rNA)[3] <- colnames(df)[3]
+#     }
+#     #
+#     df <- rbind(df, data.frame(rNA))
+# 
+#     ### plotting parameters
+#     pWidth  <- 1400
+#     pHeight <- 1200
+#     pointsize <- 8
+#     
+#     colValues <- c(0, 10, 25, 50, maxVal)
+#     #cols = c("red", "orange", "gold2", "seagreen4", "darkgreen")
+#     cols = c("red", "orange", "gold2", "forestgreen", "darkgreen")
+# 
+#     ### plotting
+#     p <- ggplot(data = df, aes_string("x", "y", fill = colnames(df)[3])) +
+#         theme_bw() +
+#         #theme(legend.position="top", legend.direction="horizontal") +
+#         geom_raster() +
+#         coord_fixed() +
+#         scale_fill_gradientn(name = "Time since last fire (years)", #limits = c(0,1),
+#                              colours = cols,
+#                              values = colValues/maxVal, limits = c(0,maxVal),
+#                              na.value = "dodgerblue1") +
+#         #coord_fixed(ratio = figRatio) +
+#         geom_polygon(aes(x = long, y = lat, group = group), data = fireZonesF,
+#                      colour = 'black', fill = NA, alpha = 0.5, size = 0.5) +
+#         geom_polygon(aes(x = long, y = lat, group = group), data = studyAreaF,
+#                      colour = 'white', fill = NA, size = 1) +
+#         labs(x = "\nx (UTM 18)",
+#               y = "y (UTM 18)\n") +
+#         theme(legend.position="top", legend.direction="horizontal") +
+#         annotate("text", x = max(df$x), y = max(df$y)+2500,
+#                  label = paste("année", l),
+#                  hjust = 1, vjust = 0, size = 0.3*pointsize, fontface = 2)
+# 
+#     f <- paste0("tsfTest_" , str_pad(l, nchar(nlayers(fire)), pad = "0"),".png")
+#     fTitle <- append(fTitle, f)
+# 
+#     png(filename = f,
+#         width = pWidth, height = pHeight, units = "px", res = 300, pointsize = pointsize,
+#         bg = "white")
+# 
+#         print(p + theme(plot.title = element_text(size = rel(0.6)),
+#                         axis.title.x = element_text(size = rel(0.5)),
+#                         axis.title.y = element_text(size = rel(0.5)),
+#                         axis.text.x = element_text(size = rel(0.5)),
+#                         axis.text.y =  element_text(size = rel(0.5), angle = 90, hjust = 0.5),
+#                         legend.title = element_text(size = rel(0.75)),
+#                         legend.text = element_text(size = rel(0.5))))
+# 
+#     dev.off()
+#     
+#     ## aging landscape
+#     tsd <- tsd + 1
+#    # return(fTitle)
+# }
+# 
+# require(animation)
+# oopt = ani.options(ani.dev="png", ani.type="png",
+#                    interval = 0.3, autobrowse = FALSE)
+# 
+# 
+# im.convert(c(fTitle, rep(fTitle[length(fTitle)], 10)), output = "tsfExample.gif",
+#            extra.opts = "", clean = F)
+# ####################################################################################################
 ###################################################################################################
-
-
-

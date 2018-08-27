@@ -1,14 +1,12 @@
 ###################################################################################################
 ###################################################################################################
-##### Visualizing fire simulations
+##### Visualizing harvest simulations
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
-rm(list = ls())
-setwd("D:/regenFailureRiskAssessmentData_phase2/2018-08-23")
-####################################################################################################
-####################################################################################################
-wwd <- paste(getwd(), Sys.Date(), sep = "/")
-dir.create(wwd)
-setwd(wwd)
+rm(list = ls()[-which(ls() %in% c("sourceDir"))])
+# setwd("D:/regenFailureRiskAssessmentData_phase2/2018-08-23")
+# wwd <- paste(getwd(), Sys.Date(), sep = "/")
+# dir.create(wwd)
+# setwd(wwd)
 #################
 require(raster)
 require(ggplot2)
@@ -117,19 +115,22 @@ shortfallDF <- outputCompiled %>%
     group_by(scenario, year, replicate) %>%
     summarise(areaHarvestedTotal_ha = sum(areaHarvestedTotal_ha)) %>%
     #group_by(scenario, year) %>%
-    mutate(p50_shortfall = areaHarvestedTotal_ha < .50*target,
+    mutate(p75_shortfall = areaHarvestedTotal_ha < .25*target,
+           p50_shortfall = areaHarvestedTotal_ha < .50*target,
            p25_shortfall = areaHarvestedTotal_ha < .75*target,
            p10_shortfall = areaHarvestedTotal_ha < .90*target,
            p05_shortfall = areaHarvestedTotal_ha < .95*target) %>%
     group_by(scenario, replicate) %>%
     arrange(year) %>%
-    mutate(p50_shortfall = cumsum(p50_shortfall)>=1,
+    mutate(p75_shortfall = cumsum(p75_shortfall)>=1,
+           p50_shortfall = cumsum(p50_shortfall)>=1,
            p25_shortfall = cumsum(p25_shortfall)>=1,
            p10_shortfall = cumsum(p10_shortfall)>=1,
            p05_shortfall = cumsum(p05_shortfall)>=1) %>%
     ungroup() %>%
     group_by(scenario, year) %>%
-    summarise(p50_shortfall = sum(p50_shortfall)/n(),
+    summarise(p75_shortfall = sum(p75_shortfall)/n(),
+              p50_shortfall = sum(p50_shortfall)/n(),
               p25_shortfall = sum(p25_shortfall)/n(),
               p10_shortfall = sum(p10_shortfall)/n(),
               p05_shortfall = sum(p05_shortfall)/n())
@@ -155,7 +156,7 @@ df <- melt(shortfallDF, id.vars = c("scenario", "year"),
 
 df$variable <- as.numeric(gsub("[^0-9]", "",  df$variable))
 df$variable <- paste0(df$variable, "%")
-df$variable <- factor(df$variable, levels = c("5%", "10%", "25%", "50%"))
+df$variable <- factor(df$variable, levels = c("5%", "10%", "25%", "50%", "75%"))
 
 
 m <- ggplot(df, aes(x = year + 2015, y = value*100,

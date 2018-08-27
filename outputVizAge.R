@@ -2,13 +2,11 @@
 ###################################################################################################
 ##### Visualizing fire simulations
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
-rm(list = ls())
-setwd("D:/regenFailureRiskAssessmentData_phase2/2018-08-23")
-####################################################################################################
-####################################################################################################
-wwd <- paste(getwd(), Sys.Date(), sep = "/")
-dir.create(wwd)
-setwd(wwd)
+rm(list = ls()[-which(ls() %in% c("sourceDir"))])
+# setwd("D:/regenFailureRiskAssessmentData_phase2/2018-08-23")
+# wwd <- paste(getwd(), Sys.Date(), sep = "/")
+# dir.create(wwd)
+# setwd(wwd)
 #################
 require(raster)
 require(ggplot2)
@@ -95,17 +93,17 @@ summaryRegen <- outputCompiled %>%
 dfSummary <- rbind(summaryOld, summaryRegen)
 
 
-foo <- merge(df, dfSummary)
+df <- merge(df, dfSummary)
 
 
 
 p <- c(p.050 = "5%", p.250 = "25%", p.500 = "médiane", p.750 = "75%", p.950 = "95%")
 
-m <- ggplot(foo, aes(x = year + 2015, y = 100*prop,
-                    group = ID, colour = simId)) +
+m <- ggplot(df, aes(x = year + 2015, y = 100*prop,
+                    group = ID)) +
                     #linetype = percentile, colour = variable)) +
     facet_grid(~ var) +
-    geom_line( alpha = 0.1) +#colour = "black",
+    geom_line(colour = "black", alpha = 0.1) +#
     geom_line(aes(y = 100*p50, group = 1),
               colour = "lightblue",
               linetype = 1, size = 0.7, alpha = 1) + #fill = "grey25"
@@ -121,10 +119,11 @@ m <- ggplot(foo, aes(x = year + 2015, y = 100*prop,
     geom_line(aes(y = 100*p75, group = 1),
               colour = "yellow",
               linetype = 4, size = 0.4, alpha = 1) +
-    geom_hline(data = targets, aes(yintercept = 100*target, colour = "red"),
+    geom_hline(data = targets, aes(yintercept = 100*target, colour = "indianred"),
                linetype = "dashed") +
     scale_linetype_discrete(guide=FALSE) +
-    scale_colour_manual(values = c("black", "red", "blue"))
+    #scale_colour_manual(values = c("black", "red", "blue"))
+    guides(colour=FALSE)
     
 
 png(filename= paste0("ageStructureRealized.png"),
@@ -143,14 +142,17 @@ print(m + theme_dark() +
           labs(title = "Structure d'âge",
                #subtitle = paste0(percentile, "e percentile"),
                subtitle = #paste0("En bleu sont illustrées les médianes et en jaune les percentiles ",
-                   paste0("La médiane est illustrée en blue tandis que les percentiles ",
+                   paste0("La médiane est illustrée en bleu tandis que les percentiles ",
                           p[1], ", ", p[2], ", ", p[4], " et ", p[5],
                           # ",\nsur un total de ", nRep, " réalisations."),
                           #sur un total de ", nRep, " réalisations."),
-                          " sont illustrés en jaune\n(Total de ", nSims, " simulations)"),
+                          "",
+                          " sont illustrés en jaune.\n",
+                          "Les seuils d'altération acceptable pouvant contraindre les récoltes sont quant à eux indiqués en rouge.\n",
+                          "(Total de ", nSims, " simulations)"),
                caption = paste0("Âge de récolte - Épinette noire: 90 ans\n",
                                 "Pin gris: 76 ans\n",
-                                "Cycle des feux - baseline: 104 ans\n",
+                                "Cycle des feux - baseline: 101 ans\n",
                                 "Min vieilles forêts (>=100 ans): 14%\n",
                                 "Max régén. (< 20 ans): 35%"),
                x = "",
