@@ -62,6 +62,11 @@ CL_DRAI <- raster("../data/Inv/CL_DRAI.tif")
 CL_DRAI_RAT <- read.csv("../data/Inv/CL_DRAI_RAT.csv")
 DEP_SUR <- raster("../data/Inv/DEP_SUR.tif")
 DEP_SUR_RAT <- read.csv("../data/Inv/DEP_SUR_RAT.csv")
+TYPE_ECO <- raster("../data/Inv/TYPE_ECO.tif")
+TYPE_ECO_RAT <- read.csv("../data/Inv/TYPE_ECO_RAT.csv")
+# general geography
+lat <-  raster("../data/Geo/lat.tif")
+long <-  raster("../data/Geo/long.tif")
 # CO_TER <- raster("../data/Inv/CO_TER.tif")
 # CO_TER_RAT <- read.csv("../data/Inv/CO_TER_RAT.csv")
 
@@ -262,6 +267,9 @@ depositCodes <- list(shallow = c("R", "R1A", "R4GA", "R7T",
                               "4GS", "4P","9S"),
                      clay = c("4GA", "4GAM", "4GAY"),
                      organic = c("7E", "7T", "7TM", "7TY"))
+
+stored <- character()
+stored <- append(stored, depositCodes)
 drainageCodes <- list(Mesic = c("00", "10", "11", "16",
                                 "20", "21", "23", "24",
                                 "30", "31"),
@@ -276,19 +284,19 @@ drain <- as.character(CL_DRAI_RAT[match(values(CL_DRAI), CL_DRAI_RAT$ID),"value"
 for (dep in names(depositCodes)) {
     depIndex <- which(surfDep %in% depositCodes[[dep]])
     x[depIndex] <- dep
-    if (dep %in% c("clay", "sand")) {
-        for (dra in names(drainageCodes)){
-            draIndex <-  which(drain %in% drainageCodes[[dra]])
-            index <- intersect(depIndex, draIndex)
-            x[index] <- paste0(dep, dra)   
-        }
-    }
+    # if (dep %in% c("clay", "sand")) { ## initial classification by Tadeusz
+    #     for (dra in names(drainageCodes)){
+    #         draIndex <-  which(drain %in% drainageCodes[[dra]])
+    #         index <- intersect(depIndex, draIndex)
+    #         x[index] <- paste0(dep, dra)   
+    #     }
+    # }
 }
 
 
 
 surfDep <- coverTypes
-surfDepLevels <- c("shallow", "sandMesic", "sandHydric", "till", "clayMesic", "clayHydric", "organic")
+surfDepLevels <- c("shallow", "sand", "till", "clay", "organic")
 surfDep[] <- factor(x, levels = surfDepLevels)
 ## creating Raster Attribute Table
 surfDep_RAT <- data.frame(ID = seq_along(surfDepLevels), value = surfDepLevels)
@@ -361,6 +369,9 @@ stored <- character()
 writeRaster(studyArea, file = "studyArea.tif", overwrite = T)
 save(studyAreaP, file = "studyAreaP.RData")
 stored <- append(stored, "studyArea")
+writeRaster(lat, file = "lat.tif", overwrite = T)
+writeRaster(long, file = "long.tif", overwrite = T)
+stored <- append(stored, c("lat", "long"))
 ## zonation
 writeRaster(uaf, file = "uaf.tif", overwrite = T)
 write.csv(uaf_RAT, file = "uaf_RAT.csv", row.names = F)
@@ -382,6 +393,9 @@ writeRaster(fireZones, file = "fireZones.tif", overwrite = T)
 write.csv(fireZones_RAT, file = "fireZones_RAT.csv", row.names = F)
 save(fireZonesP, file = "fireZonesP.RData")
 stored <- append(stored, c("fireZones", "fireZones_RAT"))
+writeRaster(lat, file = "TYPE_ECO.tif", overwrite = T)
+write.csv(fireZones_RAT, file = "TYPE_ECO_RAT.csv", row.names = F)
+stored <- append(stored, c("TYPE_ECO", "fireZones_RAT"))
 writeRaster(surfDep, file = "surfDep.tif", overwrite = T)
 write.csv(surfDep_RAT, file = "surfDep_RAT.csv", row.names = F)
 stored <- append(stored, c("surfDep", "surfDep_RAT"))
@@ -403,6 +417,7 @@ writeRaster(ericaceous, file = "ericaceous.tif", overwrite = T)
 stored <- append(stored, "ericaceous")
 writeRaster(IQS_POT, file = "iqs.tif", overwrite = T)
 stored <- append(stored, "IQS_POT")
+
 
 
 ## clearing everything from memory except these initial conditions 

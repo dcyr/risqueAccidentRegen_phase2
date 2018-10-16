@@ -40,13 +40,22 @@ initVar <- c("DUMMY","ORIGINE","AN_ORIGINE", "TYPE_COUV",
 ### loading shapefiles
 originalShapeFile <- "studyAreaCyr_Ecofor4_IQS"
 forestInventory <- readOGR(dsn = "../gis", layer = originalShapeFile)
-forestInventory <- forestInventory[,which(names(forestInventory) %in% initVar)]
+#forestInventory <- forestInventory[,which(names(forestInventory) %in% initVar)]
 forestInventory <- spTransform(forestInventory, CRSobj = crs(studyArea))
 # creating one dummy variable to create a single contour
 forestInventory$DUMMY <- 1
 #
 ## converting factors to numeric
 forestInventory$AN_ORIGINE <- as.numeric(as.character(forestInventory$AN_ORIGINE))
+
+#######################################################################
+#######################################################################
+############# Computing relative density index (rho)
+#######################################################################
+#######################################################################
+#######################################################################
+
+
 
 
 require(foreach)
@@ -140,6 +149,10 @@ lat <- studyAreaLL
 lat[] <- coordinates(lat)[,"y"]
 lat <-  projectRaster(lat, studyArea)
 
+long <- studyAreaLL
+long[] <- coordinates(long)[,"x"]
+long <-  projectRaster(long, studyArea)
+
 ### fetching ecological district-level variables
 ecoDist <- readOGR(dsn = "../gis/rf", layer = "distEcolVar")
 #ecoDist <- readOGR(dsn = inputDir, layer = "distEcol567")
@@ -155,6 +168,8 @@ ecoDist$IndSeche <- as.numeric(as.character(ecoDist$IndSeche))
 ####################################################################################################
 #########  constants
 ####################################################################################################
+
+
 
 #############
 ## ericaceous abundance
@@ -237,12 +252,10 @@ preTot[is.na(studyArea)] <- NA
 # # saving rasters
 
 
-
-
-
-
 #writeRaster(dem, file = "dem.tif", overwrite = T)
 #writeRaster(hli, file = "hli.tif", overwrite = T)
+writeRaster(lat, file = "lat.tif", overwrite = T)
+writeRaster(long, file = "long.tif", overwrite = T)
 writeRaster(ericaceous, file = "ericaceous.tif", overwrite = T)
 writeRaster(gddOver5, file = "gddOver5.tif", overwrite = T)
 writeRaster(growSeas_days, file = "growSeas_days.tif", overwrite = T)
