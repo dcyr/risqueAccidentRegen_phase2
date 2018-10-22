@@ -3,7 +3,7 @@
 ##### Compiling raw fire outputs to a tidy data frame
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
 rm(list = ls())
-setwd("D:/regenFailureRiskAssessmentData_phase2/2018-08-17_test")
+setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-22_test")
 ####################################################################################################
 ####################################################################################################
 wwd <- paste(getwd(), Sys.Date(), sep = "/")

@@ -9,16 +9,16 @@
 ####################################################################
 ####################################################################
 
-#### for testing purposes
-tsfInit <- tsd
-simDur <- 1
-yearInit <- 2015
-fireZones
-fireRegime
-fireSizeFit
-outputTSF <- TRUE
-outputFire <- FALSE
-### 
+# #### for testing purposes
+# tsfInit <- tsd
+# simDur <- 1
+# yearInit <- 2015
+# fireZones
+# fireRegime
+# fireSizeFit
+# outputTSF <- TRUE
+# outputFire <- FALSE
+# ### 
 
 simFire <- function(tsfInit, simDur, yearInit,
                 fireZones, fireRegime,

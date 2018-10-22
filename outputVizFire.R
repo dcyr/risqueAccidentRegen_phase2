@@ -3,7 +3,7 @@
 ##### Visualizing fire simulations
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
 rm(list = ls()[-which(ls() %in% c("sourceDir"))])
-# setwd("D:/regenFailureRiskAssessmentData_phase2/2018-08-23")
+# setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-22_test")
 # wwd <- paste(getwd(), Sys.Date(), sep = "/")
 # dir.create(wwd)
 # setwd(wwd)

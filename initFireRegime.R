@@ -15,6 +15,9 @@ for (i in unique(as.character(fireObs$zone))) {
     fireSizeMax[[i]] <- maxFireSize
 }
 
+## clearing everything from memory except what's been put into 'stored' 
+stored <- append(stored, c("fireSizeFit", "fireSizeMax"))
+rm(list = ls()[!ls() %in% stored])
 source("../scripts/simFireFnc.R")
 
 

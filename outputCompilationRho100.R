@@ -3,7 +3,7 @@
 ##### Compiling relative density outputs to tidy data frames
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
 rm(list = ls())
-setwd("D:/regenFailureRiskAssessmentData_phase2/2018-08-24")
+setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-22")
 ####################################################################################################
 ####################################################################################################
 wwd <- paste(getwd(), Sys.Date(), sep = "/")

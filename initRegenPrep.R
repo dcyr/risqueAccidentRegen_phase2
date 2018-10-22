@@ -2,23 +2,27 @@
 ####################################################################################################
 ###### Preparation of regeneration modul
 ###### Dominic Cyr, in collaboration with Jesus Pascual Puigdevall
-rm(list = ls())
-home <- path.expand("~")
-home <- gsub("/Documents", "", home) # necessary on my Windows machine
-setwd(paste(home, "Sync/Travail/ECCC/regenFailureRiskAssessment_phase2", sep ="/"))
-###################################################################################################
-###################################################################################################
-wwd <- paste(getwd(), Sys.Date(), sep = "/")
-dir.create(wwd)
-setwd(wwd)
+# rm(list = ls())
+# home <- path.expand("~")
+# home <- gsub("/Documents", "", home) # necessary on my Windows machine
+# setwd(paste(home, "Sync/Travail/ECCC/regenFailureRiskAssessment_phase2", sep ="/"))
+# ###################################################################################################
+# ###################################################################################################
+# wwd <- paste(getwd(), Sys.Date(), sep = "/")
+# dir.create(wwd)
+# setwd(wwd)
 #################
 require(dplyr)
 require(rgdal)
+
 # #######
 
-## run 'initRasterPrep.R'
+#######
+## uncomment the following if this script is run for testing, and not from 
+## source("../initRasterPrep.R")
 
-source("../initRasterPrep.R")
+source("../scripts/regenDensityPredictFnc.R")
+source("../scripts/Pothier-Savard.R")
 
 ## loading predictive variables for initial conditions, putting them into a data frame
 sDep <- rasterToPoints(surfDep)
@@ -88,29 +92,32 @@ pep <- pep %>%
            coverType %in% c("EN", "PG"),
            DOM_BIO %in% c(6))
 
-## visualizing stem density around 100 years
 
-require(ggplot2)
-
-p <- ggplot(data = pep, aes(x = coverType, y= den, color  = coverType)) +
-    geom_boxplot() +
-    #facet_wrap(~DOM_BIO) +
-    labs(title = "Distribution initiale des densités de tiges autour de 100 ans",
-         x = "",
-         y = "Densité de tiges à l'hectare\n") +
-    coord_flip()
-
-
-png(filename= paste0("densInitDistribution_100.png"),
-    width = 8, height = 5, units = "in", res = 600, pointsize=8)
-
-
-print(p + theme_dark())
-
-dev.off()
-
-
-
+###############################################################################################
+# ###############################################################################################
+# ############
+# ## visualizing stem density around 100 years
+# ###############################################################################################
+# require(ggplot2)
+# ###############################################################################################
+# 
+# p <- ggplot(data = pep, aes(x = coverType, y= den, color  = coverType)) +
+#     geom_boxplot() +
+#     #facet_wrap(~DOM_BIO) +
+#     labs(title = "Distribution initiale des densités de tiges autour de 100 ans",
+#          x = "",
+#          y = "Densité de tiges à l'hectare\n") +
+#     coord_flip()
+# 
+# 
+# png(filename= paste0("densInitDistribution_100.png"),
+#     width = 8, height = 5, units = "in", res = 600, pointsize=8)
+# 
+# 
+# print(p + theme_dark())
+# 
+# dev.off()
+# ###############################################################################################
 
 
 ###############################################################################################
@@ -149,18 +156,10 @@ surfDepLevels <- c("shallow", "sand", "till", "clay", "organic")
 pep[, "surfDep"] <- factor(x, levels = surfDepLevels)
 
 
-
-##############################################################
-#### loading Pothier-Savard parameter tables
-source("../scripts/Pothier-Savard.R")
-
-
 ##############################################################
 ##############################################################
 ### Compute relative density for permanent plots
 pep[,"rho"] <- rhoFnc(sp = pep$coverType, N = pep$den, Dq = pep$DQM/10, rhoCoef = rhoCoef)
-
-
 
 train <- data.frame(lat = pep$LATITUDE,
                     long = pep$LONGITUDE,
@@ -175,12 +174,10 @@ train <- data.frame(lat = pep$LATITUDE,
                     cD3 = ifelse(pep$CL_DENS == "D", 1, 0))
 
 
-
 ##############################################################
 ##############################################################
 ### Knn - Shouldn't probably be knn
 ### Something more appropriate for a continuous variable should be consider
-
 ##############################################################
 ### breaking relative density into a factor for knn
 breaks <- seq(from = 0, to = 1.7, by = 0.1)
@@ -210,59 +207,61 @@ for (i in seq_along(rhoLevels)) {
     rhoAttrib[index] <- x 
     
 }
-##################################################################################
-##################################################################################
-##################################################################################
-## visualizing results, training set vs initial conditions
-##################################################################################
 
-rhoDist <- data.frame(coverType = ifelse(round(train$cT2), "PG", "EN"),
-                      surfDep = ifelse(round(train$sD2), "sand",
-                                       ifelse(round(train$sD3), "till",
-                                              ifelse(round(train$sD4), "clay",
-                                                     ifelse(round(train$sD5), "organic",
-                                                            "shallow")))),
-                      rho = pep[-naIndex, "rho"],
-                      group = "train")
-
-
-rhoDist <- rbind(rhoDist,
-                 data.frame(coverType = ifelse(round(df$cT2), "PG",
-                                               ifelse(round(df$cT3), "F",
-                                                      ifelse(round(df$cT4), "R",
-                                                             "EN"))),
-                            surfDep = ifelse(round(df$sD2), "sand",
-                                             ifelse(round(df$sD3), "till",
-                                                    ifelse(round(df$sD4), "clay",
-                                                           ifelse(round(df$sD5), "organic",
-                                                                  "shallow")))),
-                            rho = rhoAttrib,
-                            group = "test"))
-
-rhoDist[,"ID"] <- as.numeric(as.factor(paste(rhoDist$group, rhoDist$coverType)))
-
-x <- filter(rhoDist, coverType %in% c("EN", "PG"))
-#x <- filter(rhoDist, coverType %in% c("EN", "PG"), group == "test")
-
-p <- ggplot(x, aes(x = rho, fill = group, colour = group)) +
-    geom_density(aes(y = ..scaled..), adjust = 1.25, alpha = 0.2) +
-    facet_wrap(~coverType) +
-    scale_colour_manual(values = c(train = "darkorange", test = "lightblue")) +
-    scale_fill_manual(values = c(train = "darkorange", test = "lightblue")) +
-    labs(title = "Distribution initiale des indices de densité relative à 100 ans (IDR100)",
-         x = "IDR100")#,
-         #y = "IDR100\n") #+
-    #coord_flip()
-
-
-png(filename= paste0("relDensDistribution_100.png"),
-    width = 8, height = 5, units = "in", res = 600, pointsize=8)
-
-
-print(p + theme_dark())
-
-dev.off()
-
+# ##################################################################################
+# ##################################################################################
+# ##################################################################################
+# ## visualizing results, training set vs initial conditions
+# require(ggplot2)
+# ##################################################################################
+# 
+# rhoDist <- data.frame(coverType = ifelse(round(train$cT2), "PG", "EN"),
+#                       surfDep = ifelse(round(train$sD2), "sand",
+#                                        ifelse(round(train$sD3), "till",
+#                                               ifelse(round(train$sD4), "clay",
+#                                                      ifelse(round(train$sD5), "organic",
+#                                                             "shallow")))),
+#                       rho = pep[-naIndex, "rho"],
+#                       group = "train")
+# 
+# 
+# rhoDist <- rbind(rhoDist,
+#                  data.frame(coverType = ifelse(round(df$cT2), "PG",
+#                                                ifelse(round(df$cT3), "F",
+#                                                       ifelse(round(df$cT4), "R",
+#                                                              "EN"))),
+#                             surfDep = ifelse(round(df$sD2), "sand",
+#                                              ifelse(round(df$sD3), "till",
+#                                                     ifelse(round(df$sD4), "clay",
+#                                                            ifelse(round(df$sD5), "organic",
+#                                                                   "shallow")))),
+#                             rho = rhoAttrib,
+#                             group = "test"))
+# 
+# rhoDist[,"ID"] <- as.numeric(as.factor(paste(rhoDist$group, rhoDist$coverType)))
+# 
+# x <- filter(rhoDist, coverType %in% c("EN", "PG"))
+# #x <- filter(rhoDist, coverType %in% c("EN", "PG"), group == "test")
+# 
+# p <- ggplot(x, aes(x = rho, fill = group, colour = group)) +
+#     geom_density(aes(y = ..scaled..), adjust = 1.25, alpha = 0.2) +
+#     facet_wrap(~coverType) +
+#     scale_colour_manual(values = c(train = "darkorange", test = "lightblue")) +
+#     scale_fill_manual(values = c(train = "darkorange", test = "lightblue")) +
+#     labs(title = "Distribution initiale des indices de densité relative à 100 ans (IDR100)",
+#          x = "IDR100")#,
+#          #y = "IDR100\n") #+
+#     #coord_flip()
+# 
+# 
+# png(filename= paste0("relDensDistribution_100.png"),
+#     width = 8, height = 5, units = "in", res = 600, pointsize=8)
+# 
+# 
+# print(p + theme_dark())
+# 
+# dev.off()
+# 
 # ## summary statistics
 # summaryStats <- x %>%
 #     #filter(surfDep == "till") %>%
@@ -276,10 +275,7 @@ dev.off()
 #               IDR100_p95 = quantile(rho, 0.95),
 #               n = n())
 # as.data.frame(summaryStats)
-
-
-#######################################
-
+# #######################################
 
 
 #### creating raster for IDR100 (relative density at 100 y-old)
@@ -287,53 +283,56 @@ IDR100 <- coverTypes
 names(IDR100) <- "IDR100"
 IDR100[!is.na(coverTypes)] <- rhoAttrib
 writeRaster(IDR100, file = "IDR100.tif", overwrite = T)
+stored <- append(stored, "IDR100")
 
-### plotting IDR100
-
-df <- as.data.frame(rasterToPoints(IDR100))
-
-### plotting parameters
-pWidth  <- 1400
-pHeight <- 1200
-pointsize <- 8
-maxVal <- max(df[,3])
-colValues <- c(0,  0.25, 0.75, ceiling(maxVal*10)/10)
-# cols = c("red", "orange", "gold2", "seagreen4", "darkgreen")
-cols = c("darkred", "lightgoldenrod1", "forestgreen", "darkgreen")
-
-### plotting
-p <- ggplot(data = df, aes_string("x", "y", fill = colnames(df)[3])) +
-    theme_bw() +
-    #theme(legend.position="top", legend.direction="horizontal") +
-    geom_raster() +
-    coord_fixed() +
-    scale_fill_gradientn(name = "IDR100", #limits = c(0,1),
-                         colours = cols,
-                         values = colValues/maxVal, limits = c(0,maxVal))+
-                         #na.value = "dodgerblue1") +
-    labs(title = "Conditions initiales - Indice de densité relative à 100 ans (IRD100)",
-        x = "\nx (UTM 18)",
-          y = "y (UTM 18)\n") +
-    theme(legend.position="top", legend.direction="horizontal") #+
-    # annotate("text", x = max(df$x), y = max(df$y)+2500,
-    #          label = paste("année", l),
-    #          hjust = 1, vjust = 0, size = 0.3*pointsize, fontface = 2)
-
-png(filename = "IDR100_init.png",
-    width = pWidth, height = pHeight, units = "px", res = 300, pointsize = pointsize,
-    bg = "white")
-
-    print(p + theme(plot.title = element_text(size = rel(0.6)),
-                    axis.title.x = element_text(size = rel(0.5)),
-                    axis.title.y = element_text(size = rel(0.5)),
-                    axis.text.x = element_text(size = rel(0.5)),
-                    axis.text.y =  element_text(size = rel(0.5), angle = 90, hjust = 0.5),
-                    legend.title = element_text(size = rel(0.75)),
-                    legend.text = element_text(size = rel(0.5))))
-
-dev.off()
-
-
+# # ##################################################################################
+# # ##################################################################################
+# # ##################################################################################
+# # ## visualizing IDR100
+# # require(ggplot2)
+# # ##################################################################################
+# df <- as.data.frame(rasterToPoints(IDR100))
+# 
+# ### plotting parameters
+# pWidth  <- 1400
+# pHeight <- 1200
+# pointsize <- 8
+# maxVal <- max(df[,3])
+# colValues <- c(0,  0.25, 0.75, ceiling(maxVal*10)/10)
+# # cols = c("red", "orange", "gold2", "seagreen4", "darkgreen")
+# cols = c("darkred", "lightgoldenrod1", "forestgreen", "darkgreen")
+# 
+# ### plotting
+# p <- ggplot(data = df, aes_string("x", "y", fill = colnames(df)[3])) +
+#     theme_bw() +
+#     #theme(legend.position="top", legend.direction="horizontal") +
+#     geom_raster() +
+#     coord_fixed() +
+#     scale_fill_gradientn(name = "IDR100", #limits = c(0,1),
+#                          colours = cols,
+#                          values = colValues/maxVal, limits = c(0,maxVal))+
+#                          #na.value = "dodgerblue1") +
+#     labs(title = "Conditions initiales - Indice de densité relative à 100 ans (IRD100)",
+#         x = "\nx (UTM 18)",
+#           y = "y (UTM 18)\n") +
+#     theme(legend.position="top", legend.direction="horizontal") #+
+#     # annotate("text", x = max(df$x), y = max(df$y)+2500,
+#     #          label = paste("année", l),
+#     #          hjust = 1, vjust = 0, size = 0.3*pointsize, fontface = 2)
+# 
+# png(filename = "IDR100_init.png",
+#     width = pWidth, height = pHeight, units = "px", res = 300, pointsize = pointsize,
+#     bg = "white")
+# 
+#     print(p + theme(plot.title = element_text(size = rel(0.6)),
+#                     axis.title.x = element_text(size = rel(0.5)),
+#                     axis.title.y = element_text(size = rel(0.5)),
+#                     axis.text.x = element_text(size = rel(0.5)),
+#                     axis.text.y =  element_text(size = rel(0.5), angle = 90, hjust = 0.5),
+#                     legend.title = element_text(size = rel(0.75)),
+#                     legend.text = element_text(size = rel(0.5))))
+# 
+# dev.off()
 
 
 #######################
@@ -406,24 +405,23 @@ df[,"seedlings"] <- seedlingFnc(sp = coverTypes_RAT[match(df$coverType, coverTyp
 require("qmap")
 seedlingQMapFit <- fitQmapQUANT(obs = df$IDR100, mod = df$seedlings,  nboot = 1,
                                 qstep = 0.01, wet.day = F)
+stored <- append(stored, "seedlingQMapFit")
 
-## visualizing quantile mapping function
-x <- seq(from = 0, to = 8, by = 0.01)
-yLin <- doQmapQUANT(x = x, fobj = seedlingQMapFit, type = "linear")
-x <- data.frame(x = x, y = yLin)
-
-png(filename= paste0("seedlingsToRho100.png"),
-    width = 8, height = 5, units = "in", res = 600, pointsize=8)
-
-ggplot(data = x, aes(x = x, y = y)) +
-    geom_line() +
-    labs(title = "Fonction de transfert - Densité de semis prédite -> Indice de densité relative à 100 ans",
-         subtitle = "Fonction de transfert obtenue par 'quantile mapping'",
-         x = "Densité de régénération prédite (semis / m2)",
-         y = "IDR100")
-dev.off()
-
-
+# ## visualizing quantile mapping function
+# x <- seq(from = 0, to = 8, by = 0.01)
+# yLin <- doQmapQUANT(x = x, fobj = seedlingQMapFit, type = "linear")
+# x <- data.frame(x = x, y = yLin)
+# 
+# png(filename= paste0("seedlingsToRho100.png"),
+#     width = 8, height = 5, units = "in", res = 600, pointsize=8)
+# 
+# ggplot(data = x, aes(x = x, y = y)) +
+#     geom_line() +
+#     labs(title = "Fonction de transfert - Densité de semis prédite -> Indice de densité relative à 100 ans",
+#          subtitle = "Fonction de transfert obtenue par 'quantile mapping'",
+#          x = "Densité de régénération prédite (semis / m2)",
+#          y = "IDR100")
+# dev.off()
 # 
 # require(dplyr)
 # 
@@ -446,3 +444,6 @@ dev.off()
 #     labs(title = "Densité de semis 3 ans après feu en fonction de la surface terrière")
 # 
 # dev.off()
+
+## clearing everything from memory except what's been put into 'stored' 
+rm(list = ls()[!ls() %in% stored])

@@ -64,6 +64,7 @@ tFnc <- function(sp, iqs, tCoef) {
                      b2 = b2[match(.sp, names(.tCoef))])
 
     x <- apply(df, 1, function(x)  x["b1"]*x["iqs"]^x["b2"])
+    x[is.infinite(x)] <- NA
     return(x)
 }
 
@@ -413,6 +414,7 @@ GFnc <- function(sp, Ac, iqs, rho100,
                      HdCoef = .HdCoef, DqCoef = .DqCoef, scenesCoef = .scenesCoef,
                      rho100Coef = .rho100Coef, merchantable = .merchantable, withSenescence = .withSenescence)    
     }
+    .Hd[which(.iqs == 0)] <- 0 ## to prevent NaN produced by division by zero
     
     
     df <- data.frame(Hd = .Hd,
@@ -432,40 +434,42 @@ GFnc <- function(sp, Ac, iqs, rho100,
     }
     x[which(df$Ac < 25)] <- NA
     
+    
+    
     return(x)
 }
 
-### testing function and visualizing results
-require(dplyr)
-
-nYears <- 120
-rho100 <- c(0.12, 0.375, 0.77)
-iqs <- c(10)
-
-
-df <- data.frame(Ac = rep(1:nYears, length(rho100)*2),
-                 sp = c(rep("EN", nYears*length(rho100)), rep("PG", nYears*length(rho100))),
-                 rho100 = rep(c(rep(rho100[1], nYears),
-                                rep(rho100[2], nYears),
-                                rep(rho100[3], nYears)),2),
-                 iqs = iqs)
-df[,"G"] <- GFnc(sp =  df$sp, Ac = df$Ac,  iqs = df$iqs, rho100 = df$rho100,
-                 HdCoef = HdCoef, DqCoef = DqCoef, GCoef = GCoef, merchantable = F,
-                 rho100Coef = rho100Coef, withSenescence = F)
-
-
-require(ggplot2)
-png(filename= paste0("Pothier-Savard_G.png"),
-    width = 8, height = 5, units = "in", res = 600, pointsize=8)
-
-ggplot(data = df, aes(x = Ac, y = G, colour = as.factor(rho100), linetype = sp)) +
-    geom_line() +
-    labs(title = "Surface terrière",
-        subtitle = paste("IQS =", iqs),
-        x = "Âge corrigé à 1 m",
-        y = "m2/ha")
-
-dev.off()
+# ### testing function and visualizing results
+# require(dplyr)
+# 
+# nYears <- 120
+# rho100 <- c(0.12, 0.375, 0.77)
+# iqs <- c(10)
+# 
+# 
+# df <- data.frame(Ac = rep(1:nYears, length(rho100)*2),
+#                  sp = c(rep("EN", nYears*length(rho100)), rep("PG", nYears*length(rho100))),
+#                  rho100 = rep(c(rep(rho100[1], nYears),
+#                                 rep(rho100[2], nYears),
+#                                 rep(rho100[3], nYears)),2),
+#                  iqs = iqs)
+# df[,"G"] <- GFnc(sp =  df$sp, Ac = df$Ac,  iqs = df$iqs, rho100 = df$rho100,
+#                  HdCoef = HdCoef, DqCoef = DqCoef, GCoef = GCoef, merchantable = F,
+#                  rho100Coef = rho100Coef, withSenescence = F)
+# 
+# 
+# require(ggplot2)
+# png(filename= paste0("Pothier-Savard_G.png"),
+#     width = 8, height = 5, units = "in", res = 600, pointsize=8)
+# 
+# ggplot(data = df, aes(x = Ac, y = G, colour = as.factor(rho100), linetype = sp)) +
+#     geom_line() +
+#     labs(title = "Surface terrière",
+#         subtitle = paste("IQS =", iqs),
+#         x = "Âge corrigé à 1 m",
+#         y = "m2/ha")
+# 
+# dev.off()
 
 
 ###################################################
@@ -532,39 +536,43 @@ VFnc <- function(sp, Ac, iqs, rho100,
     
 
     x <- apply(df, 1, function(x)  x["b41"] * x["Hd"]^x["b42"] * x["G"]^x["b43"] * x["Dq"]^x["b44"])
+    x[which(df$iqs == 0)] <- 0
+    if(.merchantable) {
+        x[which(df$Dq < 9)] <- 0 
+    }
     
     return(x)
 }
-
-### testing function and visualizing results
-require(dplyr)
-nYears <- 120
-rho100 <- c(0.12, 0.375, 0.77)
-iqs <- c(10)
-
-
-df <- data.frame(Ac = rep(1:nYears, 2*length(rho100)),
-                 sp = c(rep("EN", nYears*length(rho100)), rep("PG", nYears*length(rho100))),
-                 iqs = iqs,
-                 rho100 = rep(c(rep(rho100[1], nYears),
-                                rep(rho100[2], nYears),
-                                rep(rho100[3], nYears)),2))
-
-df[,"V"] <- VFnc(sp = df$sp, Ac = df$Ac, iqs = df$iqs, rho100 = df$rho100,
-                 rho100Coef = rho100Coef, HdCoef = HdCoef, GCoef = GCoef, DqCoef = DqCoef, VCoef = VCoef, merchantable = F,
-                 scenesCoef = NULL, withSenescence = F)
-
-
-require(ggplot2)
-png(filename= paste0("Pothier-Savard_V.png"),
-    width = 8, height = 5, units = "in", res = 600, pointsize=8)
-
-ggplot(data = df, aes(x = Ac, y = V, colour = as.factor(rho100), linetype = sp)) +
-    geom_line() +
-    labs(title = "Volumes marchands",
-        subtitle = paste("IQS =", iqs),
-        x = "Âge corrigé à 1 m",
-        y = "m3/ha") +
-    geom_hline(yintercept = 30, linetype = "dotted", colour = "darkgreen")
-
-dev.off()
+# 
+# ### testing function and visualizing results
+# require(dplyr)
+# nYears <- 120
+# rho100 <- c(0.043, 0.375, 0.77)
+# iqs <- c(10)
+# 
+# 
+# df <- data.frame(Ac = rep(1:nYears, 2*length(rho100)),
+#                  sp = c(rep("EN", nYears*length(rho100)), rep("PG", nYears*length(rho100))),
+#                  iqs = iqs,
+#                  rho100 = rep(c(rep(rho100[1], nYears),
+#                                 rep(rho100[2], nYears),
+#                                 rep(rho100[3], nYears)),2))
+# 
+# df[,"V"] <- VFnc(sp = df$sp, Ac = df$Ac, iqs = df$iqs, rho100 = df$rho100,
+#                  rho100Coef = rho100Coef, HdCoef = HdCoef, GCoef = GCoef, DqCoef = DqCoef, VCoef = VCoef, merchantable = F,
+#                  scenesCoef = NULL, withSenescence = F)
+# 
+# 
+# require(ggplot2)
+# png(filename= paste0("Pothier-Savard_V.png"),
+#     width = 8, height = 5, units = "in", res = 600, pointsize=8)
+# 
+# ggplot(data = df, aes(x = Ac, y = V, colour = as.factor(rho100), linetype = sp)) +
+#     geom_line() +
+#     labs(title = "Volumes marchands",
+#         subtitle = paste("IQS =", iqs),
+#         x = "Âge corrigé à 1 m",
+#         y = "m3/ha") +
+#     geom_hline(yintercept = 30, linetype = "dotted", colour = "darkgreen")
+# 
+# dev.off()
