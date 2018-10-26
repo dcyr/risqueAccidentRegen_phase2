@@ -2,8 +2,8 @@
 ###################################################################################################
 ##### Visualizing fire simulations
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
-rm(list = ls()[-which(ls() %in% c("sourceDir"))])
-# setwd("D:/regenFailureRiskAssessmentData_phase2/2018-08-23")
+rm(list = ls()[-which(ls() %in% c("sourceDir", "scenario"))])
+# setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-23")
 # wwd <- paste(getwd(), Sys.Date(), sep = "/")
 # dir.create(wwd)
 # setwd(wwd)
@@ -152,7 +152,7 @@ print(m + theme_dark() +
                           "(Total de ", nSims, " simulations)"),
                caption = paste0("Âge de récolte - Épinette noire: 90 ans\n",
                                 "Pin gris: 76 ans\n",
-                                "Cycle des feux - baseline: 101 ans\n",
+                                "Cycle des feux - baseline: 104 ans\n",
                                 "Min vieilles forêts (>=100 ans): 14%\n",
                                 "Max régén. (< 20 ans): 35%"),
                x = "",

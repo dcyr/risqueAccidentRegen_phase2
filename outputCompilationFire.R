@@ -3,8 +3,9 @@
 ##### Compiling raw fire outputs to a tidy data frame
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
 rm(list = ls())
-setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-22_test")
+setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-23")
 ####################################################################################################
+scenario <- "baseline"
 ####################################################################################################
 wwd <- paste(getwd(), Sys.Date(), sep = "/")
 dir.create(wwd)
@@ -133,4 +134,4 @@ stopCluster(cl)
 outputCompiled <-merge(outputCompiled, fireZoneArea)
 outputCompiled <- arrange(outputCompiled, scenario, replicate, year, Zone_LN)
 
-save(outputCompiled, file = "outputCompiledFire.RData")
+save(outputCompiled, file = paste0("outputCompiledFire_", scenario, ".RData")

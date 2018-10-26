@@ -3,8 +3,9 @@
 ##### Compiling raw harvest outputs to a tidy data frame
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
 rm(list = ls())
-setwd("D:/regenFailureRiskAssessmentData_phase2/2018-08-17_test")
+setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-23")
 ####################################################################################################
+scenario <- "baseline"
 ####################################################################################################
 wwd <- paste(getwd(), Sys.Date(), sep = "/")
 dir.create(wwd)
@@ -16,14 +17,12 @@ require(raster)
 require(dplyr)
 
 ####################################################################
-
 studyArea <- raster("../studyArea.tif")
 uaf <- raster("../uaf.tif")
 #subZones <- raster
 uaf_RAT <- read.csv("../uaf_RAT.csv")
 ##
 convFactor <- prod(res(studyArea))/10000### to convert to hectares
-
 
 ####################################################################
 ####################################################################
@@ -57,31 +56,46 @@ outputCompiled <- foreach(i = seq_along(x), .combine = "rbind") %dopar% {# seq_a
     require(dplyr)
     
     ## simInfo
-    s <- "test"
-    # s <- scenario[i]
+    s <- scenario
     r <- replicates[i]
     
     ## fetching outputs
     harv <- get(load(paste(outputFolder, x[i], sep="/")))
+    salv <- get(load(paste(outputFolder, gsub("Harvest", "Salvage", x[i]), sep="/")))
     
     ## compiling realized area burned
     
     areaHarvested <- t(zonal(harv, uaf,  "sum")[,-1]) * convFactor
     areaHarvested <- data.frame(areaHarvested, total = apply(areaHarvested, 1, "sum"))
-    year <- as.numeric(gsub("[^0-9]", "", rownames(areaHarvested)))
-    colnames(areaHarvested)[uaf_RAT$ID] <- as.character(uaf_RAT[uaf_RAT$ID, "value"])
+    areaSalvaged <- t(zonal(salv, uaf,  "sum")[,-1]) * convFactor
+    areaSalvaged <- data.frame(areaSalvaged, total = apply(areaSalvaged, 1, "sum"))
     
-    ## keeping only zones intercepting study areazones with non-zero area harvested
-    z <- apply(areaHarvested, 2, sum)
-    areaHarvested <- areaHarvested[z>0]
+    head(areaHarvested)
+    head(areaSalvaged)
+    yearH <- as.numeric(gsub("[^0-9]", "", rownames(areaHarvested)))
+    yearS <- as.numeric(gsub("[^0-9]", "", rownames(areaSalvaged)))
+    colnames(areaHarvested)[uaf_RAT$ID] <- colnames(areaSalvaged)[uaf_RAT$ID] <- as.character(uaf_RAT[uaf_RAT$ID, "value"])
+    
+
     
     
     ## tidying up data frame
-    areaHarvested <- data.frame(year, replicate = r, areaHarvested)
+    areaHarvested <- data.frame(year = yearH, replicate = r, harvestType = "regular", areaHarvested)
+    areaSalvaged <- data.frame(year = yearS, replicate = r, harvestType = "salvage", areaSalvaged)
+    areaHarvested <- rbind(areaHarvested, areaSalvaged)
+    
+    
+    # ######################## (what's this??)
+    # ## keeping only zones intercepting study areazones with non-zero area harvested
+    # z <- apply(areaHarvested[], 2, sum)
+    # areaHarvested <- areaHarvested[z>0]
+
+    
+    
     
     out <- melt(areaHarvested,
-                id.vars = c("year", "replicate"),
-                variable.name = "uaf",
+                id.vars = c("year", "replicate", "harvestType"),
+                variable.name = c("uaf"),
                 value.name = "areaHarvestedTotal_ha")
     
     out$uaf <- gsub("X", "", out$uaf)
@@ -96,4 +110,4 @@ outputCompiled <- foreach(i = seq_along(x), .combine = "rbind") %dopar% {# seq_a
 stopCluster(cl)
 outputCompiled <- arrange(outputCompiled, scenario, uaf, year)
 
-save(outputCompiled, file = "outputCompiledHarvest.RData")
+save(outputCompiled, file = paste0("outputCompiledHarvest_", scenario, ".RData"))

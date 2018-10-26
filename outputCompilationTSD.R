@@ -3,8 +3,9 @@
 ##### Compiling raw harvest outputs to a tidy data frame
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
 rm(list = ls())
-setwd("D:/regenFailureRiskAssessmentData_phase2/2018-08-23")
+setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-23")
 ####################################################################################################
+scenario <- "baseline"
 ####################################################################################################
 wwd <- paste(getwd(), Sys.Date(), sep = "/")
 dir.create(wwd)
@@ -16,7 +17,6 @@ require(raster)
 require(dplyr)
 
 ####################################################################
-
 studyArea <- raster("../studyArea.tif")
 uaf <- raster("../uaf.tif")
 uaf_RAT <- read.csv("../uaf_RAT.csv")
@@ -30,7 +30,7 @@ convFactor <- prod(res(studyArea))/10000### to convert to hectares
 ###################################################################
 ## loading management plan (to fetch age structure targets, and productive cover types )
 managementPlan <- get(load("../managementPlan.RData"))
-plan <- managementPlan$baseline
+plan <- managementPlan[[scenario]]
 ## eligible to harvest
 harvEligible <- uaf %in% plan$uaf &
     subZones %in% plan$subZone
@@ -77,18 +77,19 @@ require(doSNOW)
 require(parallel)
 require(foreach)
 # clusterN <- 2
-clusterN <-  15#max(1, floor(0.9*detectCores()))  ### choose number of nodes to add to cluster.
+clusterN <-  25#max(1, floor(0.9*detectCores()))  ### choose number of nodes to add to cluster.
 #######
 cl = makeCluster(clusterN, outfile = "") ##
 registerDoSNOW(cl)
 #######
-outputCompiled <- foreach(i = seq_along(x), .combine = "rbind") %dopar% {# seq_along(x)
+outputCompiled <- foreach(i = seq_along(x),
+                          .combine = "rbind") %dopar% {# seq_along(x)
     require(raster)
     require(reshape2)
     require(dplyr)
     
     ## simInfo
-    s <- "test"
+    s <- scenario
     # s <- scenario[i]
     r <- replicates[i]
     
@@ -149,4 +150,4 @@ outputCompiled <- foreach(i = seq_along(x), .combine = "rbind") %dopar% {# seq_a
 stopCluster(cl)
 outputCompiled <- arrange(outputCompiled, scenario, uaf, year, replicate)
 
-save(outputCompiled, file = "outputCompiledAge.RData")
+save(outputCompiled, file = paste0("outputCompiledAge_", scenario, ".RData"))

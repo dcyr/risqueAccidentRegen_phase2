@@ -2,11 +2,12 @@
 ###################################################################################################
 ##### Visualizing fire simulations
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
-rm(list = ls()[-which(ls() %in% c("sourceDir"))])
-# setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-22_test")
+rm(list = ls()[-which(ls() %in% c("sourceDir", "scenario"))])
+# setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-23")
 # wwd <- paste(getwd(), Sys.Date(), sep = "/")
 # dir.create(wwd)
 # setwd(wwd)
+# scenario <- "baseline"
 #################
 #require(rgdal)
 require(raster)
@@ -61,7 +62,7 @@ outputCompiled <- get(load("outputCompiledFire.RData"))
 require(dplyr)
 ## summarizing fire regimes
 
-scenario <- "test"
+
 outputSummary <- outputCompiled %>%
     filter(scenario == scenario) %>%
     group_by(Zone_LN, replicate) %>%

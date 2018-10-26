@@ -43,7 +43,7 @@ IDR100Init <- IDR100
 ####################################################################################################
 ####################################################################################################
 
-nRep <- 500
+nRep <- 1000
 simDuration <- 50
 simStartYear <- 2015
 
@@ -51,7 +51,7 @@ simStartYear <- 2015
 ### actual simulation
 require(doSNOW)
 #require(parallel)
-clusterN <-  40#max(1, floor(0.98*detectCores()))  ### choose number of nodes to add to cluster.
+clusterN <-  36#max(1, floor(0.98*detectCores()))  ### choose number of nodes to add to cluster.
 # #######
 
 outputDir <-  paste(getwd(), "output/", sep = "/")
