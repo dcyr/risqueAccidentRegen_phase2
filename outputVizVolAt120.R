@@ -28,7 +28,7 @@ subZone_RAT <- read.csv("../subZones_RAT.csv")
 ####################################################################
 ######
 ### fetching compiled results
-outputCompiled <- get(load("outputCompiledVolAt120Cls.RData"))
+outputCompiled <- get(load(paste0("outputCompiledVolAt120Cls_", scenario, ".RData")))
 
 nSims <- nrow(distinct(outputCompiled, scenario, replicate))
 

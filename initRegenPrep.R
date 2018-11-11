@@ -94,30 +94,30 @@ pep <- pep %>%
 
 
 ###############################################################################################
-# ###############################################################################################
-# ############
-# ## visualizing stem density around 100 years
-# ###############################################################################################
-# require(ggplot2)
-# ###############################################################################################
-# 
-# p <- ggplot(data = pep, aes(x = coverType, y= den, color  = coverType)) +
-#     geom_boxplot() +
-#     #facet_wrap(~DOM_BIO) +
-#     labs(title = "Distribution initiale des densités de tiges autour de 100 ans",
-#          x = "",
-#          y = "Densité de tiges à l'hectare\n") +
-#     coord_flip()
-# 
-# 
-# png(filename= paste0("densInitDistribution_100.png"),
-#     width = 8, height = 5, units = "in", res = 600, pointsize=8)
-# 
-# 
-# print(p + theme_dark())
-# 
-# dev.off()
-# ###############################################################################################
+###############################################################################################
+############
+## visualizing stem density around 100 years
+###############################################################################################
+require(ggplot2)
+###############################################################################################
+
+p <- ggplot(data = pep, aes(x = coverType, y= den, color  = coverType)) +
+    geom_boxplot() +
+    #facet_wrap(~DOM_BIO) +
+    labs(title = "Distribution initiale des densités de tiges autour de 100 ans",
+         x = "",
+         y = "Densité de tiges à l'hectare\n") +
+    coord_flip()
+
+
+png(filename= paste0("densInitDistribution_100.png"),
+    width = 8, height = 5, units = "in", res = 600, pointsize=8)
+
+
+print(p + theme_dark())
+
+dev.off()
+###############################################################################################
 
 
 ###############################################################################################
@@ -349,17 +349,20 @@ df <- merge(df, tsdInit)
 ## cap relative density to 1
 df[which(df$IDR100 > 1), "IDR100"] <- 1
 
+
 ## time to 1m
 df[,"t1"] <-  tFnc(sp = coverTypes_RAT[match(df$coverType, coverTypes_RAT$ID), "value"],
                    iqs = df$IQS_POT,
                    tCoef = tCoef)
 df[is.infinite(df$t1), "t1"] <- NA
 
+
 ## Age at 1m
 df[,"Ac"] <- df$tsd - df$t1
 #df[is.na(df$Ac), "Ac"] 
 df[which(df$Ac < 0), "Ac"] <- 0
 df[which(df$Ac > 150), "Ac"] <- 150
+
 
 
 ## basal area (not merchantable, Ac > 25 years)
@@ -384,66 +387,101 @@ df[,"seedlings"] <- seedlingFnc(sp = coverTypes_RAT[match(df$coverType, coverTyp
                                 seedCoef = seedCoef, tCoef = tCoef)
 
 
-# ### visualizing empirical cumulative distribution functions
-# png(filename= paste0("seedlingPredInitial_cdf.png"),
-#     width = 8, height = 5, units = "in", res = 600, pointsize=8)
-# plot(ecdf(df$seedlings),
-#      xlab = "densité de régénération prédite (semis par m2)",
-#      #ylab = "Probabilité cumulée",
-#      main = "Densité de régénération prédite (conditions initiales)\nFonction de distribution cumulative")
-# dev.off()
-# 
-# png(filename= paste0("IDR100Initial_cdf.png"),
-#     width = 8, height = 5, units = "in", res = 600, pointsize=8)
-# plot(ecdf(df$IDR100),
-#      xlab = "Indice de densité relative à 100 ans (IDR100)",
-#      #ylab = "Probabilité cumulée",
-#      main = "Indice de densité relative (conditions initiales)\nFonction de distribution cumulative")
-# dev.off()
+### visualizing empirical cumulative distribution functions
+png(filename= paste0("seedlingPredInitial_cdf.png"),
+    width = 8, height = 5, units = "in", res = 600, pointsize=8)
+plot(ecdf(df$seedlings),
+     xlab = "densité de régénération prédite (semis par m2)",
+     #ylab = "Probabilité cumulée",
+     main = "Densité de régénération prédite (conditions initiales)\nFonction de distribution cumulative")
+dev.off()
+
+png(filename= paste0("IDR100Initial_cdf.png"),
+    width = 8, height = 5, units = "in", res = 600, pointsize=8)
+plot(ecdf(df$IDR100),
+     xlab = "Indice de densité relative à 100 ans (IDR100)",
+     #ylab = "Probabilité cumulée",
+     main = "Indice de densité relative (conditions initiales)\nFonction de distribution cumulative")
+dev.off()
 
 
 require("qmap")
 seedlingQMapFit <- fitQmapQUANT(obs = df$IDR100, mod = df$seedlings,  nboot = 1,
-                                qstep = 0.01, wet.day = F)
+                                qstep = 0.01, wet.day = quantile(df$seedlings, 0.09, na.rm = T))
 stored <- append(stored, "seedlingQMapFit")
 
-# ## visualizing quantile mapping function
-# x <- seq(from = 0, to = 8, by = 0.01)
-# yLin <- doQmapQUANT(x = x, fobj = seedlingQMapFit, type = "linear")
-# x <- data.frame(x = x, y = yLin)
-# 
-# png(filename= paste0("seedlingsToRho100.png"),
-#     width = 8, height = 5, units = "in", res = 600, pointsize=8)
-# 
-# ggplot(data = x, aes(x = x, y = y)) +
-#     geom_line() +
-#     labs(title = "Fonction de transfert - Densité de semis prédite -> Indice de densité relative à 100 ans",
-#          subtitle = "Fonction de transfert obtenue par 'quantile mapping'",
-#          x = "Densité de régénération prédite (semis / m2)",
-#          y = "IDR100")
-# dev.off()
-# 
-# require(dplyr)
-# 
-# png(filename= paste0("Splawinski_seedlingDensVsAc.png"),
-#     width = 8, height = 5, units = "in", res = 600, pointsize=8)
-# 
-# ggplot(data = df, aes(x = Ac, y = seedlings, colour = as.factor(rho100), linetype = sp)) +
-#     geom_line() +
-#     labs(title = "Densité de semis 3 ans après feu en fonction de l'âge corrigé",
-#          subtitle = paste("IQS:", iqs),
-#          y = "semis par m2")
-# 
-# dev.off()
-# 
-# png(filename= paste0("Splawinski_GVsRho100.png"),
-#     width = 8, height = 5, units = "in", res = 600, pointsize=8)
-# 
-# ggplot(data = df, aes(x = Ac, y = G, colour = sp, linetype = as.factor(rho100))) +
-#     geom_line() +
-#     labs(title = "Densité de semis 3 ans après feu en fonction de la surface terrière")
-# 
-# dev.off()
+## visualizing quantile mapping function
+x <- seq(from = 0, to = max(df$seedlings, na.rm =T), by = 0.01)
+yLin <- doQmapQUANT(x = x, fobj = seedlingQMapFit, type = "linear")
+x <- data.frame(x = x, y = yLin)
+
+png(filename= paste0("seedlingsToRho100.png"),
+    width = 8, height = 5, units = "in", res = 600, pointsize=8)
+
+ggplot(data = x, aes(x = x, y = y)) +
+    geom_line() +
+    labs(title = "Fonction de transfert - Densité de semis prédite -> Indice de densité relative à 100 ans",
+         subtitle = "Fonction de transfert obtenue par 'quantile mapping'",
+         x = "Densité de régénération prédite (semis / m2)",
+         y = "IDR100")
+dev.off()
+
+
+
+
+###testing function
+Ac <- 1:120
+rho100 <- c(0.12, 0.375, 0.77)
+iqs <- c(10)
+
+df <- data.frame(sp = c(rep("EN", length(rho100)*length(Ac)), rep("PG", length(rho100)*length(Ac))),
+                 rho100 = c(rep(rho100[1], length(Ac)), rep(rho100[2], length(Ac)),
+                            rep(rho100[3], length(Ac))),
+                            #rep(rho100[4], length(Ac))),
+                 Ac = Ac,
+                 iqs = iqs)
+
+df[,"G"] <- GFnc(sp = df$sp, Ac = df$Ac, iqs = df$iqs, rho100 = df$rho100,
+                 HdCoef = HdCoef, GCoef = GCoef,
+                 rho100Coef = rho100Coef, scenesCoef = NULL, withSenescence = F,
+                 DqCoef = DqCoef, merchantable = F)
+
+
+# if Ac < 25, an approximation of basal area must be computed
+index <- which(df$Ac < 25)
+df[index,"G"] <- df[index, "Ac"]/25 *
+    GFnc(sp = df[index, "sp"],
+         Ac = 25, iqs = df[index, "iqs"],
+         rho100 = df[index, "rho100"],
+         HdCoef = HdCoef, GCoef = GCoef,
+         rho100Coef = rho100Coef, scenesCoef = NULL, withSenescence = F,
+         DqCoef = DqCoef, merchantable = F)
+
+df[,"seedlings"] <- seedlingFnc(sp = df$sp, Ac = df$Ac, G = df$G, iqs = df$iqs,
+                                seedCoef = seedCoef,
+                                tCoef = tCoef)
+
+
+require(dplyr)
+png(filename= paste0("Splawinski_seedlingDensVsAc.png"),
+    width = 8, height = 5, units = "in", res = 600, pointsize=8)
+
+ggplot(data = df, aes(x = Ac, y = seedlings, colour = as.factor(rho100), linetype = sp)) +
+    geom_line() +
+    labs(title = "Densité de semis 3 ans après feu en fonction de l'âge corrigé",
+         subtitle = paste("IQS:", iqs),
+         y = "semis par m2")
+
+dev.off()
+
+png(filename= paste0("Splawinski_GVsRho100.png"),
+    width = 8, height = 5, units = "in", res = 600, pointsize=8)
+
+ggplot(data = df, aes(x = Ac, y = G, colour = sp, linetype = as.factor(rho100))) +
+    geom_line() +
+    labs(title = "Surface terrière en fonction de l'âge corrigé (incluant st non-marchande)")
+
+dev.off()
 
 ## clearing everything from memory except what's been put into 'stored' 
 rm(list = ls()[!ls() %in% stored])

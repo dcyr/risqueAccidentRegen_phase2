@@ -2,15 +2,17 @@
 ###################################################################################################
 ##### Compiling relative density outputs to tidy data frames
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
-rm(list = ls())
-setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-23")
-####################################################################################################
-###########################################
-scenario <- "baseline"
-####################################################################################################
-wwd <- paste(getwd(), Sys.Date(), sep = "/")
-dir.create(wwd)
-setwd(wwd)
+rm(list = ls()[-which(ls() %in% c("sourceDir", "scenario"))])
+#######
+# rm(list = ls())
+# setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-29")
+# ####################################################################################################
+# ###########################################
+# scenario <- "baseline"
+# ####################################################################################################
+# wwd <- paste(getwd(), Sys.Date(), sep = "/")
+# dir.create(wwd)
+# setwd(wwd)
 #################
 #require(rgdal)
 require(raster)

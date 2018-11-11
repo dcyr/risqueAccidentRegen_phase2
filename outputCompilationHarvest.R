@@ -2,14 +2,18 @@
 ###################################################################################################
 ##### Compiling raw harvest outputs to a tidy data frame
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
-rm(list = ls())
-setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-23")
-####################################################################################################
-scenario <- "baseline"
-####################################################################################################
-wwd <- paste(getwd(), Sys.Date(), sep = "/")
-dir.create(wwd)
-setwd(wwd)
+rm(list = ls()[-which(ls() %in% c("sourceDir", "scenario"))])
+#######
+# rm(list = ls())
+# setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-29_coupe0.62_recup70")
+# ####################################################################################################
+# scenario <- "coupe0.62_recup70"
+# ####################################################################################################
+# wwd <- paste(getwd(), Sys.Date(), sep = "/")
+# dir.create(wwd)
+# setwd(wwd)
+
+
 #################
 #require(rgdal)
 require(raster)
@@ -102,7 +106,7 @@ outputCompiled <- foreach(i = seq_along(x), .combine = "rbind") %dopar% {# seq_a
     out$uaf <- gsub("\\.", "-", out$uaf)
     out <- data.frame(scenario = s, out)
     
-    print(paste(s, r))
+    print(paste("harvest", s, r))
     return(out)
     
 }

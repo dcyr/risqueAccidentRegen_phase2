@@ -180,115 +180,122 @@ foreach(i = 0:(nRep-1),
         f[!f] <- NA
         fire[[y]] <- f
         
-
+        # # ##saving f for testing purposes
+        # save(f, file = paste0(outputDir, "fire_", y, ".RData"))
+        
         ####################### computing pre-fire stand attributes 
         ### focussing on burned cells 
         index <- which(values(f & studyArea & coverTypes %in% plan$comSppId[["SEPM"]]))
        
-        #if (length(index > 0)) {
-            iqs <- IQS_POT[index]
-            a <- tsd[index]
-            sp <- coverTypes_RAT[match(coverTypes[index], coverTypes_RAT$ID), "value"]
-            r100 <- IDR100[index]
-            
-            ## age at 1m
-            Ac <- round(a - tFnc(sp = sp,
-                           iqs = iqs,
-                           tCoef = tCoef))
-            
-            Ac[iqs == 0] <- 0
-            ## capping Ac at 150
-            Ac[Ac>150] <- 150
-          
-            
-            ## basal area (all diameters, Ac >= 25)
-            g <- GFnc(sp = sp, Ac = Ac, iqs = iqs, rho100 = r100,
-                      HdCoef = HdCoef, GCoef = GCoef, rho100Coef = rho100Coef,
-                      withSenescence = F, DqCoef = DqCoef, merchantable = F)
-            
-            ## basal area (all diameters, approximation for stands with Ac < 25)
-            ageIndex <- which(Ac < 25)
-            
-            if(length(ageIndex) > 1) {
-                x <- Ac[ageIndex]/25 *
-                    GFnc(sp = sp[ageIndex], Ac = 25, iqs = iqs[ageIndex],
-                         rho100 = r100[ageIndex],
-                         HdCoef = HdCoef, GCoef = GCoef,
-                         rho100Coef = rho100Coef, scenesCoef = NULL, withSenescence = F,
-                         DqCoef = DqCoef, merchantable = F)
-                
-                g[ageIndex] <- x
-            }
-            
-            ## merchantable volume 
-            v <- VFnc(sp = sp, Ac = Ac, iqs = iqs, rho100 = r100,
-                      rho100Coef = rho100Coef, HdCoef = HdCoef, GCoef = GCoef, DqCoef = DqCoef, VCoef = VCoef, merchantable = T,
-                      scenesCoef = NULL, withSenescence = F)
-            
-            ####################### Salvage logging
-            
-            salvageIndex <- index[which(v > plan$salvageEligibility$`SEPM`)]
-            
-            s <- studyArea
-            s[] <- NA
-            s[salvageIndex] <- 1
-            # ## saving salvaged cells for testing purposes
-            # save(s, file = paste0(outputDir, "s_", y, ".RData"))
-            salv[[y]] <- s
-            
-            ####################### simulating regeneration density
-            
-            ## seedling density
-            seedlingDens <- seedlingFnc(sp = sp, Ac = Ac, G = g, iqs = iqs, seedCoef = seedCoef, tCoef = tCoef)
-            
-            ## work with is.na(seedlingDens==F)
-            x <- rep(NA, length(seedlingDens))
-            indexSeedlings <- !is.na(seedlingDens)
-            
-            ## converting seedling density to new relative density
-            x[indexSeedlings] <- doQmapQUANT(x = seedlingDens[indexSeedlings], fobj = seedlingQMapFit, type = "linear")
-            x <- round(x, 3)
-            ## setting seedling density in cells with cells 
-            
-            ####################### updating relative density, only when stands were not salvaged
-            ## (here we assume that salvaged stands are put back to their former density)
-            
-            ## updating rho100 and volAt120 in each burned cell
-            IDR100[index] <- x
-            
-            ### new vol at 120
-            v120 <- VFnc(sp = sp, Ac = ageRef[index]-t1[index], iqs = iqs, rho100 = x,
-                         rho100Coef = rho100Coef, HdCoef = HdCoef, GCoef = GCoef, DqCoef = DqCoef, VCoef = VCoef, merchantable = T,
-                         scenesCoef = NULL, withSenescence = F)
-            
-            
-            volAt120[index] <- v120
-            
-            
-            
-            ## keeping best value for salvaged stands (assume no decrease in relative density)
-            ## relative density
-            indexMaintained <- which(index %in% salvageIndex)
-            x <- cbind(r100[indexMaintained], # former value
-                        x[indexMaintained]) ## new value
-            x <- apply(x, 1, function(x) max(x, na.rm = T))
-            IDR100[salvageIndex] <- x
-            ## corresponding volume at 120
-            volAt120[salvageIndex] <- VFnc(sp = sp[indexMaintained],
-                                           Ac = ageRef[salvageIndex]-t1[salvageIndex],
-                                           iqs = iqs[indexMaintained], rho100 = x,
-                                           rho100Coef = rho100Coef, HdCoef = HdCoef, GCoef = GCoef, DqCoef = DqCoef, VCoef = VCoef, merchantable = T,
-                                           scenesCoef = NULL, withSenescence = F)
-            
-            ## storing updated relative density
-            rho100[[y]] <- IDR100
-            
-            # ##saving volAt120 for testing purposes
-            # save(v120, file = paste0(outputDir, "v120_", y, ".RData"))
-            # ## saving IDR100 for testing purposes
-            # save(IDR100, file = paste0(outputDir, "IDR100_", y, ".RData"))
-        #}
+    
+        iqs <- IQS_POT[index]
+        a <- tsd[index]
+        sp <- coverTypes_RAT[match(coverTypes[index], coverTypes_RAT$ID), "value"]
+        r100 <- IDR100[index]
         
+        ## age at 1m
+        Ac <- round(a - tFnc(sp = sp,
+                       iqs = iqs,
+                       tCoef = tCoef))
+        
+        Ac[iqs == 0] <- 0
+        ## capping Ac at 150
+        Ac[Ac>150] <- 150
+      
+        
+        ## basal area (all diameters, Ac >= 25)
+        g <- GFnc(sp = sp, Ac = Ac, iqs = iqs, rho100 = r100,
+                  HdCoef = HdCoef, GCoef = GCoef, rho100Coef = rho100Coef,
+                  withSenescence = F, DqCoef = DqCoef, merchantable = F)
+        
+        ## basal area (all diameters, approximation for stands with Ac < 25)
+        ageIndex <- which(Ac < 25)
+        
+        if(length(ageIndex) > 1) {
+            x <- Ac[ageIndex]/25 *
+                GFnc(sp = sp[ageIndex], Ac = 25, iqs = iqs[ageIndex],
+                     rho100 = r100[ageIndex],
+                     HdCoef = HdCoef, GCoef = GCoef,
+                     rho100Coef = rho100Coef, scenesCoef = NULL, withSenescence = F,
+                     DqCoef = DqCoef, merchantable = F)
+            
+            g[ageIndex] <- x
+        }
+        
+        ## merchantable volume 
+        v <- VFnc(sp = sp, Ac = Ac, iqs = iqs, rho100 = r100,
+                  rho100Coef = rho100Coef, HdCoef = HdCoef, GCoef = GCoef, DqCoef = DqCoef, VCoef = VCoef, merchantable = T,
+                  scenesCoef = NULL, withSenescence = F)
+        
+        ####################### Salvage logging
+        
+        salvageIndex <- index[which(v > plan$salvageEligibility$`SEPM`)]
+        ## indentifying those eligible to harvest
+        eligibleToSalvage <- which(values(sum(spEligible, na.rm = T)) == 1)
+        salvageIndex <- salvageIndex[salvageIndex %in% eligibleToSalvage]
+        ## salvaging only the allowed proportion
+        salvageIndex <- sample(salvageIndex,
+                               size = length(salvageIndex) * plan$salvageTargetStandProp$SEPM)
+        
+        s <- studyArea
+        s[] <- NA
+        s[salvageIndex] <- 1
+        # # ## saving salvaged cells for testing purposes
+        # save(s, file = paste0(outputDir, "s_", y, ".RData"))
+        salv[[y]] <- s
+        
+        ####################### simulating regeneration density
+        
+        ## seedling density
+        seedlingDens <- seedlingFnc(sp = sp, Ac = Ac, G = g, iqs = iqs, seedCoef = seedCoef, tCoef = tCoef)
+        
+        ## work with is.na(seedlingDens==F)
+        x <- rep(NA, length(seedlingDens))
+        indexSeedlings <- !is.na(seedlingDens)
+        
+        ## converting seedling density to new relative density
+        x[indexSeedlings] <- doQmapQUANT(x = seedlingDens[indexSeedlings], fobj = seedlingQMapFit, type = "linear")
+        x <- round(x, 3)
+        ## setting seedling density in cells with cells 
+        
+        ####################### updating relative density, only when stands were not salvaged
+        ## (here we assume that salvaged stands are put back to their former density)
+        
+        ## updating rho100 and volAt120 in each burned cell
+        IDR100[index] <- x
+        
+        ### new vol at 120
+        v120 <- VFnc(sp = sp, Ac = ageRef[index]-t1[index], iqs = iqs, rho100 = x,
+                     rho100Coef = rho100Coef, HdCoef = HdCoef, GCoef = GCoef, DqCoef = DqCoef, VCoef = VCoef, merchantable = T,
+                     scenesCoef = NULL, withSenescence = F)
+        
+        
+        volAt120[index] <- v120
+        
+        
+        
+        ## keeping best value for salvaged stands (assume no decrease in relative density)
+        ## relative density
+        indexMaintained <- which(index %in% salvageIndex)
+        x <- cbind(r100[indexMaintained], # former value
+                    x[indexMaintained]) ## new value
+        x <- apply(x, 1, function(x) max(x, na.rm = T))
+        IDR100[salvageIndex] <- x
+        ## corresponding volume at 120
+        volAt120[salvageIndex] <- VFnc(sp = sp[indexMaintained],
+                                       Ac = ageRef[salvageIndex]-t1[salvageIndex],
+                                       iqs = iqs[indexMaintained], rho100 = x,
+                                       rho100Coef = rho100Coef, HdCoef = HdCoef, GCoef = GCoef, DqCoef = DqCoef, VCoef = VCoef, merchantable = T,
+                                       scenesCoef = NULL, withSenescence = F)
+        
+        ## storing updated relative density
+        rho100[[y]] <- IDR100
+        
+        # ##saving volAt120 for testing purposes
+        # save(v120, file = paste0(outputDir, "v120_", y, ".RData"))
+        # ## saving IDR100 for testing purposes
+        # save(IDR100, file = paste0(outputDir, "IDR100_", y, ".RData"))
+    
         ####################### updating tsd (do after updating density)
         tsd[f] <- 0
         
@@ -326,19 +333,20 @@ foreach(i = 0:(nRep-1),
             ## determining the amount that was salvaged within the uaf
             sU <- which(values(spEligible[[u]]) & values(s)) 
             salvProp <- length(sU) / sum(values(spEligible[[u]]), na.rm = T)  
-
+            salvPropVolEquiv <- salvProp*plan$salvageWoodPropLost$SEPM
+            
             if(marginOld > 0  &
                marginRegen > 0 &
-               salvProp < plan$targetHarvestLevels[["SEPM"]]) {
+               salvPropVolEquiv < plan$targetHarvestLevels[["SEPM"]]) {
                 
                 ## determining the number of cells to harvest
-                p <- min(plan$targetHarvestLevels[["SEPM"]] - salvProp,
+                p <- min(plan$targetHarvestLevels[["SEPM"]] - salvPropVolEquiv,
                          marginOld, marginRegen)
                 nCell <- round(p * sum(values(spEligible[[u]]), na.rm = T))
                 ## eligible cells
                 index <- which(values(eligible[[u]]))
                 ## sampling cells
-                x <- append(x, sample(index, size = nCell))
+                x <- append(x, sample(index, size = min(length(index), nCell)))
             }
 
         }

@@ -3,10 +3,12 @@
 ##### Visualizing harvest simulations
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
 rm(list = ls()[-which(ls() %in% c("sourceDir", "scenario"))])
-# setwd("D:/regenFailureRiskAssessmentData_phase2/2018-08-23")
+# setwd("D:/regenFailureRiskAssessmentData_phase2/2018-11-07_coupe0.31_recup70")
 # wwd <- paste(getwd(), Sys.Date(), sep = "/")
 # dir.create(wwd)
 # setwd(wwd)
+# #####
+# scenario  <-  "coupe0.31_recup70"
 #################
 require(raster)
 require(ggplot2)
@@ -29,7 +31,7 @@ subZones_RAT <- read.csv("../subZones_RAT.csv")
 coverTypes <- raster("../coverTypes.tif")
 coverTypes_RAT <- read.csv("../coverTypes_RAT.csv")
     
-plan <- get(load("../managementPlan.RData"))[[scenario]]
+plan <- get(load("../managementPlan.RData"))[["baseline"]]
     
 ## eligible to harvest
 harvEligible <- uaf %in% plan$uaf &
@@ -56,27 +58,34 @@ target <- rbind(target, data.frame(id = NA, uaf = "total",
 ####################################################################
 ######
 ### fetching compiled results
-outputCompiled <- get(load("outputCompiledHarvest.RData"))
+outputCompiled <- get(load(paste0("outputCompiledHarvest_", scenario, ".RData")))
 
 nSims <- nrow(distinct(outputCompiled, scenario, replicate))
 
 ### summarizing results, percentile & such
-outputCompiled <- filter(outputCompiled, uaf != "total")
+outputCompiled <- filter(outputCompiled, uaf == "026-61")
 outputCompiled <- merge(outputCompiled, target)
-targetTotal <- target[target$uaf == "total", "harvTargetArea_ha"]
+targetTotal <- target[target$uaf == "026-61", "harvTargetArea_ha"]
 ###
 
+
 summaryHarvest <- outputCompiled %>%
-    mutate(propTotal = areaHarvestedTotal_ha / harvTargetArea_ha) %>%
-    group_by(scenario, year, replicate, harvestType) %>%
+    mutate(scenario = scenario,
+           propTotal = areaHarvestedTotal_ha / harvTargetArea_ha) %>%
+    group_by(scenario, year, uaf, replicate, harvestType) %>%
     summarise(areaHarvestedTotal_ha = sum(areaHarvestedTotal_ha),
               harvTargetArea_ha = sum(harvTargetArea_ha)) %>%
-    group_by(scenario, replicate, year, harvTargetArea_ha) %>%
+    group_by(scenario, uaf, replicate, year, harvTargetArea_ha) %>%
     summarize(salvProp = areaHarvestedTotal_ha[harvestType == "salvage"] / sum(areaHarvestedTotal_ha),
               areaHarvestedTotal_ha = sum(areaHarvestedTotal_ha)) %>%
     mutate(areaHarvestedTotal_ha = ifelse(areaHarvestedTotal_ha>harvTargetArea_ha,
-                                          harvTargetArea_ha, areaHarvestedTotal_ha)) %>%
-    group_by(scenario, year) %>%
+                                          harvTargetArea_ha, areaHarvestedTotal_ha))
+
+write.csv(summaryHarvest, paste0("harvestSummary_", scenario, ".csv"), row.names = F)
+
+
+summaryHarvest <- summaryHarvest %>%
+    group_by(scenario, uaf, year) %>%
     summarise(p01HarvestProp = quantile(areaHarvestedTotal_ha, .01),
               p05HarvestProp = quantile(areaHarvestedTotal_ha, .05),
               p25HarvestProp = quantile(areaHarvestedTotal_ha, .25),
@@ -92,6 +101,7 @@ summaryHarvest <- outputCompiled %>%
               p95SalvProp = quantile(salvProp, .95, na.rm = T),
               p99SalvProp = quantile(salvProp, .99, na.rm = T))
 
+write.csv(summaryHarvest, paste0("harvestSummaryPercentiles_", scenario, ".csv"), row.names = F)
 
 ##############################################################################
 ### Plotting realized harvests 
@@ -110,9 +120,9 @@ df$prob <- as.numeric(gsub("[^0-9]","", df$prob))
 df$prob <- paste0(df$prob, "%")
 df$prob <- factor(df$prob, levels = c("1%", "5%", "25%", "50%", "75%", "95%", "99%"))
 #target <- summaryHarvest
+targ <- target[which(target$uaf == "total"), "harvTargetArea_ha"]
 
-
-m <- ggplot(df, aes(x = year + 2015, y = (value/3950)*100,
+m <- ggplot(df, aes(x = year + 2015, y = (value/targ)*100,
                     linetype = prob)) +
     #facet_grid(coverType ~ scenario) +
     geom_line(size = 0.5) +
@@ -217,28 +227,30 @@ dev.off()
 
 ### summarizing results, shortfall probs
 shortfallDF <- outputCompiled %>%
-    group_by(scenario, year, replicate) %>%
+    group_by(scenario, uaf, year, replicate) %>%
     summarise(areaHarvestedTotal_ha = sum(areaHarvestedTotal_ha)) %>%
     #group_by(scenario, year) %>%
-    mutate(p75_shortfall = areaHarvestedTotal_ha < .25*targetTotal,
-           p50_shortfall = areaHarvestedTotal_ha < .50*targetTotal,
-           p25_shortfall = areaHarvestedTotal_ha < .75*targetTotal,
-           p10_shortfall = areaHarvestedTotal_ha < .90*targetTotal,
-           p05_shortfall = areaHarvestedTotal_ha < .95*targetTotal) %>%
-    group_by(scenario, replicate) %>%
+    mutate(shortfall_tol75 = areaHarvestedTotal_ha < .25*targetTotal,
+           shortfall_tol50 = areaHarvestedTotal_ha < .50*targetTotal,
+           shortfall_tol25 = areaHarvestedTotal_ha < .75*targetTotal,
+           shortfall_tol10 = areaHarvestedTotal_ha < .90*targetTotal,
+           shortfall_tol05 = areaHarvestedTotal_ha < .95*targetTotal) %>%
+    group_by(scenario, uaf, replicate) %>%
     arrange(year) %>%
-    mutate(p75_shortfall = cumsum(p75_shortfall)>=1,
-           p50_shortfall = cumsum(p50_shortfall)>=1,
-           p25_shortfall = cumsum(p25_shortfall)>=1,
-           p10_shortfall = cumsum(p10_shortfall)>=1,
-           p05_shortfall = cumsum(p05_shortfall)>=1) %>%
+    mutate(shortfall_tol75 = cumsum(shortfall_tol75)>=1,
+           shortfall_tol50 = cumsum(shortfall_tol50)>=1,
+           shortfall_tol25 = cumsum(shortfall_tol25)>=1,
+           shortfall_tol10 = cumsum(shortfall_tol10)>=1,
+           shortfall_tol05 = cumsum(shortfall_tol05)>=1) %>%
     ungroup() %>%
-    group_by(scenario, year) %>%
-    summarise(p75_shortfall = sum(p75_shortfall)/n(),
-              p50_shortfall = sum(p50_shortfall)/n(),
-              p25_shortfall = sum(p25_shortfall)/n(),
-              p10_shortfall = sum(p10_shortfall)/n(),
-              p05_shortfall = sum(p05_shortfall)/n())
+    group_by(scenario, uaf, year) %>%
+    summarise(shortfall_tol75 = sum(shortfall_tol75)/n(),
+              shortfall_tol50 = sum(shortfall_tol50)/n(),
+              shortfall_tol25 = sum(shortfall_tol25)/n(),
+              shortfall_tol10 = sum(shortfall_tol10)/n(),
+              shortfall_tol05 = sum(shortfall_tol05)/n())
+
+write.csv(shortfallDF, file = paste0("harvestShortfallPercentiles_", scenario, ".csv"), row.names = F)
 
 vars <- colnames(shortfallDF)
 vars <- vars[grep("shortfall", vars)]

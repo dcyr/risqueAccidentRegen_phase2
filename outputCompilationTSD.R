@@ -2,15 +2,19 @@
 ###################################################################################################
 ##### Compiling raw harvest outputs to a tidy data frame
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
-rm(list = ls())
-setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-23")
-####################################################################################################
-scenario <- "baseline"
-####################################################################################################
-wwd <- paste(getwd(), Sys.Date(), sep = "/")
-dir.create(wwd)
-setwd(wwd)
+rm(list = ls()[-which(ls() %in% c("sourceDir", "scenario"))])
+# #####
+# rm(list = ls())
+# setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-29_coupe0.62_recup70")
+# ####################################################################################################
+# scenario <- "coupe0.62_recup70"
+# ####################################################################################################
+# wwd <- paste(getwd(), Sys.Date(), sep = "/")
+# dir.create(wwd)
+# setwd(wwd)
 #################
+
+
 #require(rgdal)
 require(raster)
 #require(rgeos)
@@ -30,7 +34,7 @@ convFactor <- prod(res(studyArea))/10000### to convert to hectares
 ###################################################################
 ## loading management plan (to fetch age structure targets, and productive cover types )
 managementPlan <- get(load("../managementPlan.RData"))
-plan <- managementPlan[[scenario]]
+plan <- managementPlan$baseline
 ## eligible to harvest
 harvEligible <- uaf %in% plan$uaf &
     subZones %in% plan$subZone
@@ -142,7 +146,7 @@ outputCompiled <- foreach(i = seq_along(x),
     out <- merge(regenArea, oldArea)
     out <- merge(out, eligibleArea)
      
-    print(paste(s, r))
+    print(paste("age", s, r))
     return(out)
     
 }

@@ -96,8 +96,11 @@ seedlingFnc <- function(sp, Ac, G, iqs, seedCoef, tCoef) {
     df[,"seedsPerSqM"] <- apply(df, 1, function(x) x["a"]*x["b"]*(x["ba"]^x["c"]))
     
     ### survival after 3 years
-    df[,"surv"] <- apply(df, 1, function(x)  x["g"] * (0.3 *(1-exp(-x["fl"] * x["m"]^x["b2"]))) + ## poor seedbeds
-                             x["g"] * (0.7 *(1-exp(-x["fh"] * x["m"]^x["d"])))) ## good seedbeds
+    df[,"surv"] <- apply(df, 1, function(x)  x["g"] * (0.08 *(1-exp(-x["fl"] * x["m"]^x["b2"]))) + ## poor seedbeds
+                             x["g"] * (0.82 *(1-exp(-x["fh"] * x["m"]^x["d"])))) ## good seedbeds
+    
+    # df[,"surv"] <- apply(df, 1, function(x)  x["g"] * (0.13 *(1-exp(-x["fl"] * x["m"]^x["b2"]))) + ## poor seedbeds
+    #                          x["g"] * (0.8 *(1-exp(-x["fh"] * x["m"]^x["d"])))) ## good seedbeds
     
     ### seedling density after 3 years
     x <- apply(df, 1, function(x) x["seedsPerSqM"] * x["surv"])
@@ -112,11 +115,9 @@ seedlingFnc <- function(sp, Ac, G, iqs, seedCoef, tCoef) {
 
 
 # ###testing function
-# 
-# nYears <- 1:120
+# Ac <- 1:120
 # rho100 <- c(0.12, 0.375, 0.77)
 # iqs <- c(10)
-# 
 # 
 # df <- data.frame(sp = c(rep("EN", length(rho100)*length(Ac)), rep("PG", length(rho100)*length(Ac))),
 #                  rho100 = c(rep(rho100[1], length(Ac)), rep(rho100[2], length(Ac)),
@@ -142,8 +143,9 @@ seedlingFnc <- function(sp, Ac, G, iqs, seedCoef, tCoef) {
 #          DqCoef = DqCoef, merchantable = F)
 # 
 # df[,"seedlings"] <- seedlingFnc(sp = df$sp, Ac = df$Ac, G = df$G, iqs = df$iqs,
-#                                 seedCoef = seedCoef, propCones = propCones, tCoef = tCoef)
-# 
+#                                 seedCoef = seedCoef,
+#                                 tCoef = tCoef)
+
 # require(dplyr)
 # 
 # png(filename= paste0("Splawinski_seedlingDensVsAc.png"),

@@ -18,7 +18,7 @@ require(reshape2)
 # ######
 
 ### fetching compiled results
-outputCompiled <- get(load("outputCompiledAge.RData"))
+outputCompiled <- get(load(paste0("outputCompiledAge_", scenario, ".RData")))
 
 nSims <- nrow(distinct(outputCompiled, scenario, replicate))
 
@@ -36,20 +36,22 @@ targets <- data.frame(target = c(plan$regenMaxProp, plan$oldMinProp),
 
 
 ## reformating outputs
-outputCompiled <- filter(outputCompiled, uaf == "total")
+outputCompiled <- filter(outputCompiled, uaf == "026-61")
 
 df  <-  outputCompiled %>%
     mutate(oldProp = oldArea_ha/managedAreaTotal_ha,
            regenProp = regenArea_ha/managedAreaTotal_ha,
-           ID = as.numeric(as.factor(paste(uaf, scenario, replicate))),
-           simId = replicate>200)
+           ID = as.numeric(as.factor(paste(uaf, scenario, replicate))))
 
 vars <- colnames(df)
 vars <- vars[grep("Prop", vars)]
-df <- melt(df, id.vars = c("uaf", "ID", "simId", "scenario", "replicate", "year"), 
+df <- melt(df, id.vars = c("uaf", "ID", "scenario", "replicate", "year"), 
            measure.vars = vars,
            variable.name = "var",
            value.name = "prop")
+
+write.csv(select(df, scenario, uaf, replicate, year, var, prop),
+          file = paste0("ageSummary_", scenario, ".csv"), row.names = F)
 
 ## defining variables, and cleaning up names
 ageLevels <- c(paste0("Regenerating stands (<", regenMaxAge, " y.old)"),
