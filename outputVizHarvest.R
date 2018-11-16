@@ -151,9 +151,9 @@ print(m + theme_dark() +
                caption = paste0("Âge min. de récolte (sauf récup.) - Épinette noire: 90 ans\n",
                                 "Pin gris: 76 ans\n",
                                 "Vol. marchand min.: 50 m3/ha (Récup.: 70 m3/ha)\n",
-                                "Cycle des feux - baseline: 104 ans\n",
-                                "Min vieilles forêts (>=100 ans): 14%\n",
-                                "Max régén. (< 20 ans): 35%"),
+                                "Cycle des feux - baseline: 104 ans\n"),
+                                #"Min vieilles forêts (>=100 ans): 14%\n",
+                                #"Max régén. (< 20 ans): 35%"),
                x = "",
                y = "Fraction du taux de récolte ciblé récoltée (%)\n"))
 
@@ -212,9 +212,9 @@ print(m + theme_dark() +
                caption = paste0("Âge min. de récolte (sauf récup.) - Épinette noire: 90 ans\n",
                                 "Pin gris: 76 ans\n",
                                 "Vol. marchand min.: 50 m3/ha (Récup.: 70 m3/ha)\n",
-                                "Cycle des feux - baseline: 104 ans\n",
-                                "Min vieilles forêts (>=100 ans): 14%\n",
-                                "Max régén. (< 20 ans): 35%"),
+                                "Cycle des feux - baseline: 104 ans\n"),
+               #"Min vieilles forêts (>=100 ans): 14%\n",
+               #"Max régén. (< 20 ans): 35%"),
                x = "",
                y = "Proportion des coupes de récupération (%)\n"))
 
@@ -294,9 +294,10 @@ print(m + theme_dark() +
                caption = paste0("Âge min. de récolte (sauf récup.) - Épinette noire: 90 ans\n",
                                 "Pin gris: 76 ans\n",
                                 "Vol. marchand min.: 50 m3/ha (Récup.: 70 m3/ha)\n",
-                                "Cycle des feux - baseline: 104 ans\n",
-                                "Min vieilles forêts (>=100 ans): 14%\n",
-                                "Max régén. (< 20 ans): 35%"),
+                                
+                                "Cycle des feux - baseline: 104 ans\n"),
+               #"Min vieilles forêts (>=100 ans): 14%\n",
+               #"Max régén. (< 20 ans): 35%"),
                x = "",
                y = "Probabilité de rupture\nd'approvisionnement (%)\n"))
 

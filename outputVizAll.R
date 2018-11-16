@@ -3,9 +3,10 @@
 ##### Visualizing everything
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
 rm(list = ls())
-setwd("D:/regenFailureRiskAssessmentData_phase2/2018-11-01_fireOnly")
+setwd("D:/regenFailureRiskAssessmentData_phase2/2018-11-15_coupe0.62_recup70_newRegenModule")
+#setwd("~/Sync/Travail/ECCC/regenFailureRiskAssessment_phase2/2018-11-09_regenNoLimit")
 ####################################################################################################
-scenario <- "coupe0_recup0"
+scenario <- "coupe0.62_recup70"
 ####################################################################################################
 sourceDir <- path.expand("~")
 sourceDir <- gsub("/Documents", "", sourceDir) # necessary on my Windows machine
@@ -18,6 +19,6 @@ setwd(wwd)
 ## use eval() and parse() instead of source() to deal with special character under Windows.
 eval(parse(paste(sourceDir, "outputVizFire.R", sep = "/"), encoding = 'UTF-8'))
 eval(parse(paste(sourceDir, "outputVizHarvest.R", sep = "/"), encoding = 'UTF-8'))
-# eval(parse(paste(sourceDir, "outputVizVolAt120.R", sep = "/"), encoding = 'UTF-8'))
+#eval(parse(paste(sourceDir, "outputVizVolAt120.R", sep = "/"), encoding = 'UTF-8'))
 eval(parse(paste(sourceDir, "outputVizAge.R", sep = "/"), encoding = 'UTF-8'))
-# 
+#eval(parse(paste(sourceDir, "resultsTransitionMatrix.R", sep = "/"), encoding = 'UTF-8')) 

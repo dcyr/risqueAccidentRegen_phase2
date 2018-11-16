@@ -107,12 +107,12 @@ require(doSNOW)
 require(parallel)
 require(foreach)
 # clusterN <- 2
-clusterN <-  20#max(1, floor(0.9*detectCores()))  ### choose number of nodes to add to cluster.
+clusterN <-  16#max(1, floor(0.9*detectCores()))  ### choose number of nodes to add to cluster.
 #######
 cl = makeCluster(clusterN, outfile = "") ##
 registerDoSNOW(cl)
 #######
-outputCompiled <- foreach(i = seq_along(x), .combine = "rbind") %dopar% {# 
+outputCompiled <- foreach(i = 101:1000, .combine = "rbind") %dopar% {# seq_along(x), .combine = "rbind") %dopar% {
     require(raster)
     require(reshape2)
     require(dplyr)

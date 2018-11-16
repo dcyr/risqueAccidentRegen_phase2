@@ -63,20 +63,29 @@ require(dplyr)
 ## summarizing fire regimes
 
 
+# outputSummary <- outputCompiled %>%
+#     #filter(scenario == scenario) %>%
+#     
+#     arrange(Zone_LN, replicate, year)
+
+
+## create data frame with annual data
+df <- outputCompiled %>%
+    group_by(Zone_LN, replicate, year) %>%
+    summarize(#fireCycle = round((1/mean(areaBurnedTotal_ha/areaZoneTotal_ha))),
+              propAAB = mean(areaBurnedTotal_ha/areaZoneTotal_ha)) %>%
+    filter(Zone_LN == "total") %>%
+    ungroup() %>%
+    mutate(scenario = scenario) %>%
+    select(scenario, replicate, year, propAAB)
+write.csv(df, file = paste0("fireSummary_", scenario, ".csv"), row.names = F)
+
+## create data frame with 
 outputSummary <- outputCompiled %>%
-    #filter(scenario == scenario) %>%
     group_by(Zone_LN, replicate) %>%
     summarize(fireCycle = round((1/mean(areaBurnedTotal_ha/areaZoneTotal_ha))),
               propAAB = mean(areaBurnedTotal_ha/areaZoneTotal_ha)) %>%
     arrange(Zone_LN, replicate)
-
-df <- outputSummary %>%
-    filter(Zone_LN == "total") %>%
-    ungroup() %>%
-    mutate(scenario = scenario) %>%
-    select(scenario, replicate, fireCycle, propAAB)
-
-write.csv(df, file = paste("fireSummary_", scenario, ".csv"), row.names = F)
 
 fcSummary <- outputSummary %>%
     group_by(Zone_LN) %>%

@@ -31,6 +31,7 @@ regenMaxAge <- plan$regenMaxAge
 oldMinAge <- plan$oldMinAge
 ageLevels <- c(paste0("Regenerating stands (<", regenMaxAge, " y.old)"),
                paste0("Old stands (>=", oldMinAge, " y.old)"))
+
 targets <- data.frame(target = c(plan$regenMaxProp, plan$oldMinProp),
                       var = factor(ageLevels, levels = ageLevels))
 
@@ -155,8 +156,8 @@ print(m + theme_dark() +
                caption = paste0("Âge de récolte - Épinette noire: 90 ans\n",
                                 "Pin gris: 76 ans\n",
                                 "Cycle des feux - baseline: 104 ans\n",
-                                "Min vieilles forêts (>=100 ans): 14%\n",
-                                "Max régén. (< 20 ans): 35%"),
+                                "Min vieilles forêts (>=100 ans): ", targets[2,1]*100, "%\n",
+                                "Max régén. (< 20 ans): ",targets[1,1]*100, "%"),
                x = "",
                y = "Proportion du territoire éligible à la récolte (%)\n"))
 

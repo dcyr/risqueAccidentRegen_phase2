@@ -212,15 +212,39 @@ foreach(i = 0:(nRep-1),
         ageIndex <- which(Ac < 25)
         
         if(length(ageIndex) > 1) {
-            x <- Ac[ageIndex]/25 *
+            # x <- Ac[ageIndex]/25 *
+            #     GFnc(sp = sp[ageIndex], Ac = 25, iqs = iqs[ageIndex],
+            #          rho100 = r100[ageIndex],
+            #          HdCoef = HdCoef, GCoef = GCoef,
+            #          rho100Coef = rho100Coef, scenesCoef = NULL, withSenescence = F,
+            #          DqCoef = DqCoef, merchantable = F)
+            # 
+            
+            x <- #Ac[ageIndex]/25 *
                 GFnc(sp = sp[ageIndex], Ac = 25, iqs = iqs[ageIndex],
                      rho100 = r100[ageIndex],
                      HdCoef = HdCoef, GCoef = GCoef,
                      rho100Coef = rho100Coef, scenesCoef = NULL, withSenescence = F,
-                     DqCoef = DqCoef, merchantable = F)
-            
+                     DqCoef = DqCoef, merchantable = F) - 
+                (25-Ac[ageIndex]) *
+                (GFnc(sp = sp[ageIndex], Ac = 26, iqs = iqs[ageIndex],
+                      rho100 = r100[ageIndex],
+                      HdCoef = HdCoef, GCoef = GCoef,
+                      rho100Coef = rho100Coef, scenesCoef = NULL, withSenescence = F,
+                      DqCoef = DqCoef, merchantable = F) - 
+                     GFnc(sp = sp[ageIndex], Ac = 25, iqs = iqs[ageIndex],
+                          rho100 = r100[ageIndex],
+                          HdCoef = HdCoef, GCoef = GCoef,
+                          rho100Coef = rho100Coef, scenesCoef = NULL, withSenescence = F,
+                          DqCoef = DqCoef, merchantable = F))
+
+            x[x<0] <- 0
             g[ageIndex] <- x
+            
         }
+
+        
+        ################################################################################
         
         ## merchantable volume 
         v <- VFnc(sp = sp, Ac = Ac, iqs = iqs, rho100 = r100,
