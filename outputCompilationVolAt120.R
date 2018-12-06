@@ -3,6 +3,8 @@
 ##### Compiling relative density outputs to tidy data frames
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
 rm(list = ls()[-which(ls() %in% c("sourceDir", "scenario"))])
+volAt120OutputDir <- "outputVolAt120"
+dir.create(volAt120OutputDir)
 #######
 # rm(list = ls())
 # setwd("D:/regenFailureRiskAssessmentData_phase2/2018-10-29")
@@ -107,12 +109,12 @@ require(doSNOW)
 require(parallel)
 require(foreach)
 # clusterN <- 2
-clusterN <-  16#max(1, floor(0.9*detectCores()))  ### choose number of nodes to add to cluster.
+clusterN <-  12#max(1, floor(0.9*detectCores()))  ### choose number of nodes to add to cluster.
 #######
 cl = makeCluster(clusterN, outfile = "") ##
 registerDoSNOW(cl)
 #######
-outputCompiled <- foreach(i = 101:1000, .combine = "rbind") %dopar% {# seq_along(x), .combine = "rbind") %dopar% {
+outputCompiled <- foreach(i = seq_along(x), .combine = "rbind") %dopar% {
     require(raster)
     require(reshape2)
     require(dplyr)
@@ -126,15 +128,19 @@ outputCompiled <- foreach(i = 101:1000, .combine = "rbind") %dopar% {# seq_along
     rho100 <- get(load(paste(outputFolder, x[i], sep="/")))
     ## focusing on commercial species
     rho100[is.na(spEligible)] <- NA
-    
-    
+    index <- which(complete.cases(values(rho100)))
+    volAt120 <- rho100
+    volAt120[] <- NA
     ## compiling relative density at 100 y-old species and subzones
     out <- as.data.frame(values(rho100))
     rm(rho100)
     vals <- colnames(out)    
     out <- cbind(ctVal, iqsVal, szVal, t1Val, out)
     out <- melt(out, measure.vars = vals)
-    out <- out[complete.cases(out),]
+    vAt120 <- out[,c("variable", "value")]
+    vAt120[,"value"] <- NA
+    index <- which(complete.cases(out))
+    out <- out[index,]
     ## compute volume at 120 y-old
     out <- out %>%
         mutate(volAt120 = VFnc(sp = coverTypes_RAT[match(ctVal, coverTypes_RAT$ID), "value"],
@@ -145,7 +151,21 @@ outputCompiled <- foreach(i = 101:1000, .combine = "rbind") %dopar% {# seq_along
                                rho100Coef = rho100Coef, merchantable = T,
                                scenesCoef = NULL, withSenescence = F)) %>%
         mutate(volAt120 = ifelse(is.na(volAt120), 0, volAt120)) %>%
-        mutate(volAt120Cls =  cut(volAt120, include.lowest = T, right = F, breaks=c(0,50, 80, 999))) %>%
+        mutate(volAt120Cls =  cut(volAt120, include.lowest = T, right = F, breaks=c(0,50, 80, 999)))
+    
+    
+    #rVal <- unstack(out[,c("variable", "volAt120")], form = volAt120 ~ variable)
+    #rVal <- do.call("cbind", rVal)
+    ## storing values in raster stack
+    vAt120[index,"value"] <- out$volAt120
+    vAt120 <- unstack(vAt120[,c("variable", "value")], form = value ~ variable)
+    vAt120 <- round(as.matrix(vAt120),1)
+    values(volAt120) <- vAt120
+    # save raster 'volAt120'
+    save(volAt120, file = paste0(volAt120OutputDir, "/outputVolAt120_", simInfo[[i]][2], ".RData"))
+
+    
+    out <- out %>%
         group_by(ctVal, szVal, variable, volAt120Cls) %>%
         summarise(Area_ha = n()*convFactor)
     

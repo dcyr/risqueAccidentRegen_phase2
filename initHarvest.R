@@ -22,9 +22,9 @@ names(spMaturity) <- 1:length(spMaturity)
 ## zonal grouping for age structure targets
 targetAgeGrouping <- c("uaf", "subZones") # factors
 targetHarvestLevels <- list(SEPM = c(0.0062))
-regenMaxProp <- 1 # max proportion of regenerating stands
+regenMaxProp <- .35 # max proportion of regenerating stands
 regenMaxAge <- 20 #less than x years since last disturbance
-oldMinProp <- 0 # min proportion of old stands
+oldMinProp <- .14 # min proportion of old stands
 oldMinAge <- 100
 ## salvage logging parameters
 salvageTargetStandProp <- list(SEPM = c(.70)) ## max proportion of commercial volume that is salvaged

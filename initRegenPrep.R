@@ -96,7 +96,7 @@ pep <- pep %>%
 # ###############################################################################################
 # ###############################################################################################
 # ############
-# ## visualizing stem density around 100 years
+## visualizing stem density around 100 years
 # ###############################################################################################
 # require(ggplot2)
 # ###############################################################################################
@@ -107,7 +107,8 @@ pep <- pep %>%
 #     labs(title = "Distribution initiale des densités de tiges autour de 100 ans",
 #          x = "",
 #          y = "Densité de tiges à l'hectare\n") +
-#     coord_flip()
+#     coord_flip() +
+#     scale_color_manual("Cover type", values = c("indianred", "deepskyblue4", "darkgreen"))
 # 
 # 
 # png(filename= paste0("densInitDistribution_100.png"),
@@ -405,17 +406,17 @@ df[,"seedlings"] <- seedlingFnc(sp = coverTypes_RAT[match(df$coverType, coverTyp
 # png(filename= paste0("seedlingPredInitial_cdf.png"),
 #     width = 8, height = 5, units = "in", res = 600, pointsize=8)
 # plot(ecdf(df$seedlings),
-#      xlab = "densité de régénération prédite (semis par m2)",
-#      #ylab = "Probabilité cumulée",
-#      main = "Densité de régénération prédite (conditions initiales)\nFonction de distribution cumulative")
+#      xlab = "Predicted seedling density\n(seedl. per sq-meter)",
+#      ylab = "",
+#      main = "Predicted post-fire seedling density - CDF - Initial conditions")
 # dev.off()
 # 
 # png(filename= paste0("IDR100Initial_cdf.png"),
 #     width = 8, height = 5, units = "in", res = 600, pointsize=8)
 # plot(ecdf(df$IDR100),
-#      xlab = "Indice de densité relative à 100 ans (IDR100)",
-#      #ylab = "Probabilité cumulée",
-#      main = "Indice de densité relative (conditions initiales)\nFonction de distribution cumulative")
+#      xlab = "IDR100",
+#      ylab = "",
+#      main = "Relative density index (IDR100) - CDF - Initial conditions")
 # dev.off()
 
 
@@ -434,15 +435,15 @@ stored <- append(stored, "seedlingQMapFit")
 # 
 # ggplot(data = x, aes(x = x, y = y)) +
 #     geom_line() +
-#     labs(title = "Fonction de transfert - Densité de semis prédite -> Indice de densité relative à 100 ans",
-#          subtitle = "Fonction de transfert obtenue par 'quantile mapping'",
-#          x = "Densité de régénération prédite (semis / m2)",
+#     labs(title = "Quantile mapping transfert function",
+#          subtitle = "Predicted seedling density -> Relative density at 100 y.old",
+#          x = "Seedling density (seedl. per sq-meter)",
 #          y = "IDR100")
 # dev.off()
 
 
-
-
+# #################################################################################
+# #################################################################################
 # ###testing function
 # Ac <- 1:150
 # rho100 <- c(0.12, 0.375, 0.77)
@@ -498,10 +499,10 @@ stored <- append(stored, "seedlingQMapFit")
 # 
 # ################
 # 
+# 
 # df[,"seedlings"] <- seedlingFnc(sp = df$sp, Ac = df$Ac, G = df$G, iqs = df$iqs,
 #                                 seedCoef = seedCoef,
 #                                 tCoef = tCoef)
-# 
 # 
 # require(dplyr)
 # png(filename= paste0("Splawinski_seedlingDensVsAc.png"),
@@ -509,11 +510,15 @@ stored <- append(stored, "seedlingQMapFit")
 # 
 # ggplot(data = df, aes(x = Ac, y = seedlings, colour = as.factor(rho100), linetype = sp)) +
 #     geom_line() +
-#     labs(title = "Densité de semis 3 ans après feu en fonction de l'âge corrigé",
-#          subtitle = paste("IQS:", iqs),
-#          y = "semis par m2")
+#     labs(title = "Post-fire seedling density (3 years) as a function of pre-fire stand attributes",
+#          subtitle = paste("Site index:", iqs),
+#          y = "seedlings per sq-meter",
+#          x = "Age at 1 m (years)")+
+#     scale_color_manual("Pre-fire IDR100", values = c("indianred", "deepskyblue4", "darkgreen")) +
+#     scale_linetype_manual("Cover type", values = c(1,2))
 # 
 # dev.off()
+# 
 # 
 # png(filename= paste0("Splawinski_IDR100DensVsAc.png"),
 #     width = 8, height = 5, units = "in", res = 600, pointsize=8)
@@ -521,9 +526,12 @@ stored <- append(stored, "seedlingQMapFit")
 # ggplot(data = df, aes(x = Ac, y = doQmapQUANT(x = seedlings, fobj = seedlingQMapFit, type = "linear"),
 #                       colour = as.factor(rho100), linetype = sp)) +
 #     geom_line() +
-#     labs(title = "Rho100 après feu en fonction de l'âge corrigé",
-#          subtitle = paste("IQS:", iqs),
-#          y = "IDR100")
+#     labs(title = "Post-fire relative density index (IDR100) as a function of stand attributes",
+#          subtitle = paste("Site index:", iqs),
+#          y = "Post-fire IDR100",
+#          x = "Age at 1 m (years)")+
+#     scale_color_manual("Pre-fire IDR100", values = c("indianred", "deepskyblue4", "darkgreen")) +
+#     scale_linetype_manual("Cover type", values = c(1,2))
 # 
 # dev.off()
 # 
@@ -531,9 +539,13 @@ stored <- append(stored, "seedlingQMapFit")
 # png(filename= paste0("Splawinski_GVsRho100.png"),
 #     width = 8, height = 5, units = "in", res = 600, pointsize=8)
 # 
-# ggplot(data = df, aes(x = Ac, y = G, colour = sp, linetype = as.factor(rho100))) +
+# ggplot(data = df, aes(x = Ac, y = G, colour = as.factor(rho100), linetype = sp)) +
 #     geom_line() +
-#     labs(title = "Surface terrière en fonction de l'âge corrigé (incluant st non-marchande)")
+#     labs(title = "Basal area as a function of age (including non-merchantable)",
+#          y = "Basal area (sq-m)",
+#          x = "Age at 1 m (years)") +
+#     scale_color_manual("Pre-fire IDR100", values = c("indianred", "deepskyblue4", "darkgreen")) +
+#     scale_linetype_manual("Cover type", values = c(1,2))
 # 
 # dev.off()
 

@@ -5,7 +5,7 @@
 rm(list = ls())
 home <- path.expand("~")
 home <- gsub("/Documents", "", home) # necessary on my Windows machine
-setwd(paste(home, "Sync/Travail/ECCC/regenFailureRiskAssessment_phase2", sep ="/"))
+setwd(paste(home, "Sync/Travail/ECCC/regenFailureRiskAssessment_phase2/", sep ="/"))
 ####################################################################################################
 ####################################################################################################
 wwd <- paste(getwd(), Sys.Date(), sep = "/")

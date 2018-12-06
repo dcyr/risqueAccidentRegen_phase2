@@ -19,7 +19,7 @@ propConesFnc <- function(sp, iqs, Ac, tCoef) {
     # Black spruce: polynomial approximation based on Viglas et al 2013
     index <- which(.sp == "EN")
     .a <- as.data.frame(.age[index])
-    foo <- apply(.a, 1, function(x) 1.93839E-07*x[1]^3 - -0.000103703*x[1]^2 + 0.018378091*x[1] - 0.083051941)
+    #foo <- apply(.a, 1, function(x) 1.93839E-07*x[1]^3 - -0.000103703*x[1]^2 + 0.018378091*x[1] - 0.083051941)
     x[index] <- apply(.a, 1, function(x) 0.0000002*x[1]^3 - 0.0001*x[1]^2 + 0.0184*x[1] -0.0831 )
     
     ####### 
@@ -74,6 +74,7 @@ seedlingFnc <- function(sp, Ac, G, iqs, seedCoef, tCoef) {
     fl <- as.numeric(lapply(.seedCoef, function(x) x["fl"]))
     fh <- as.numeric(lapply(.seedCoef, function(x) x["fh"]))
     g <- as.numeric(lapply(.seedCoef, function(x) x["g"]))
+    td <- as.numeric(lapply(.seedCoef, function(x) x["td"]))
     
     # seed production / m2
     
@@ -87,20 +88,21 @@ seedlingFnc <- function(sp, Ac, G, iqs, seedCoef, tCoef) {
                      d = d[match(.sp, names(.seedCoef))],
                      fl = fl[match(.sp, names(.seedCoef))],
                      fh = fh[match(.sp, names(.seedCoef))],
-                     g = g[match(.sp, names(.seedCoef))])
+                     g = g[match(.sp, names(.seedCoef))],
+                     td = td[match(.sp, names(.seedCoef))])
     
    
     
     
     ### seed production (number of seeds per sq-meter; Greene and Johnson 1998)
-    df[,"seedsPerSqM"] <- apply(df, 1, function(x) x["a"]*x["b"]*(x["ba"]^x["c"]))
-    
-    ### survival after 3 years
-    df[,"surv"] <- apply(df, 1, function(x)  x["g"] * (0.08 *(1-exp(-x["fl"] * x["m"]^x["b2"]))) + ## poor seedbeds
-                             x["g"] * (0.82 *(1-exp(-x["fh"] * x["m"]^x["d"])))) ## good seedbeds
-    
-    # df[,"surv"] <- apply(df, 1, function(x)  x["g"] * (0.13 *(1-exp(-x["fl"] * x["m"]^x["b2"]))) + ## poor seedbeds
-    #                          x["g"] * (0.8 *(1-exp(-x["fh"] * x["m"]^x["d"])))) ## good seedbeds
+    df[,"seedsPerSqM"] <- apply(df, 1, function(x) x["a"]*x["b"]*(x["ba"]^x["c"])*x["td"])
+
+    ### survival after 3 years, depends a lot on good seedbed availability
+    df[,"surv"] <- apply(df, 1, function(x)  x["g"] * (0.07 * ## seedbed available
+                                                       (1-exp(-x["fl"] * x["m"]^x["b2"]))) + ## good seedbeds
+                             x["g"] * (0.82 *## poor seedbed
+                                           (1-exp(-x["fh"] * x["m"]^x["d"])))) ## bad seedbeds
+
     
     ### seedling density after 3 years
     x <- apply(df, 1, function(x) x["seedsPerSqM"] * x["surv"])
@@ -115,7 +117,7 @@ seedlingFnc <- function(sp, Ac, G, iqs, seedCoef, tCoef) {
 
 
 # ###testing function
-# Ac <- 1:120
+# Ac <- 1:150
 # rho100 <- c(0.12, 0.375, 0.77)
 # iqs <- c(10)
 # 
@@ -145,8 +147,9 @@ seedlingFnc <- function(sp, Ac, G, iqs, seedCoef, tCoef) {
 # df[,"seedlings"] <- seedlingFnc(sp = df$sp, Ac = df$Ac, G = df$G, iqs = df$iqs,
 #                                 seedCoef = seedCoef,
 #                                 tCoef = tCoef)
-
+# 
 # require(dplyr)
+# require(ggplot2)
 # 
 # png(filename= paste0("Splawinski_seedlingDensVsAc.png"),
 #     width = 8, height = 5, units = "in", res = 600, pointsize=8)
