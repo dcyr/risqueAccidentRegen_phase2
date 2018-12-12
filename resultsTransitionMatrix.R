@@ -79,10 +79,6 @@ for (sp in unique(outputCompiled$coverType)) {
     }
 }
 
-foo <- seqMatrixBlank
-
-able(do.call("sum", seqMatrix[[2]][[4]][[1:10]])+seqMatrix[[1]][[4]][[1]], margin = 1), 2)
-
 ## global transition matrix, first time steps
 round(prop.table(seqMatrix[[2]][[4]][[1]]+seqMatrix[[1]][[4]][[1]], margin = 1), 2)
 ## global transition matrix, first time steps
@@ -90,7 +86,7 @@ round(prop.table(seqMatrix[[2]][[4]][[50]]+seqMatrix[[1]][[4]][[50]], margin = 1
 ## global transition matrix, all time steps
 round(prop.table(globalMatrix[[2]][[4]]+globalMatrix[[1]][[4]], margin = 1), 2)
 
-, 1))
+
 
 
 ### reformatting annual transition matrices
@@ -123,92 +119,113 @@ for (sp in unique(outputCompiled$coverType)) {
     }
 }
 ## storing in a single data.frame
-transDF <- do.call("rbind", transDF)
+df <- do.call("rbind", transDF) %>%
+    #filter(coverType == "EN",
+    #       year == 1) %>%
+    mutate(zone = ifelse(subZone == "Productive forest - harvestable", "Eligible to harvest",
+                         "Ineligible to harvest")) %>%
+    group_by(coverType, year, preFireCls, postFireCls) %>%
+    summarize(cellCount = sum(cellCount))
+# 
+# 
+# prop.table(df$cellCount, df$preFireCls)
+# require(reshape2)
+# dcast(df, cellCount + preFireCls ~ postFireCls)
 
+##  converting into wide format
+df <- dcast(df, coverType + year + preFireCls ~ postFireCls)
+## computing proportion based on cellCount
+df[,(ncol(df)-2):ncol(df)] <- round(t(apply(df[(ncol(df)-2):ncol(df)], 1, prop.table)), 2)
 
+## selecting transition matrix of interest
+filter(df, coverType == "EN", year == 1)
+filter(df, coverType == "PG", year == 1)
+
+filter(df, coverType == "EN", year == 50)
+filter(df, coverType == "PG", year == 50)
 
 ##
-require(ggplot2)
-
-ggplot(data = transDF, aes(x = year, y = prop, colour = postFireCls, linetype = coverType)) +
-    geom_line() +
-    #stat_summary(fun.data = "mean_sdl", geom = "smooth") +
-    facet_grid(subZone ~ preFireCls) 
-
-
-    
-## summarizing 
-transSummaryDF <- transDF %>% 
-    group_by(coverType, subZone, year) %>%
-    summarise(accident = sum(cellCount[which(postFireCls == "[0,50)")]) /
-                  sum(cellCount[which(postFireCls %in% c("[50,80)", "[80,999]"))]),
-              maintien = sum(cellCount[which(postFi)]))
-
-    
-transSummaryDF <- transDF %>% 
-    group_by(coverType, subZone, preFireCls, postFireCls) %>%
-    summarise(cellCount = sum(cellCount)) %>%
-    ungroup() %>%
-    group_by(coverType, subZone, preFireCls) %>%
-    mutate(cellCountTotal = sum(cellCount)) %>%
-    ungroup() %>%
-    mutate(prop = cellCount/cellCountTotal)
-
-transSummaryDF2 <- transSummaryDF %>%
-    group_by(coverType, subZone) %>%
-    summarise(accident = sum(cellCount[which(preFireCls != "[0,50)"&
-                                                 postFireCls == "[0,50)")])/
-                  sum(cellCount[which(preFireCls != "[0,50)")]))
-
-    
-
-transSummaryDF2 <- transSummaryDF %>%
-    group_by(coverType, subZone) %>%
-    
-    
-    
-
-
-
-
-        seqMatrix[[sp]][[sz]] <- list()
-        globalMatrix[[sp]][[sz]] <- seqMatrixBlank
-        
-        for (y in 1:50) {
-
-for (y in seq_along(seqMatrix)) {
-    df <- round(prop.table(seqMatrix[[y]], margin = 1), 5)  
-    df <- data.frame(yeardf)
-    if(y == 1) {
-      transDf <- df
-    } else {
-        transDf <- rbind(transDf, df)
-    }
-}
-seqMatrix
-
-
-    #creating standardized sequence
-    unifSeq <- seq(0, 10*round((max(years)-min(years))/10), by=10)
-    state <- rep(NA, length(unifSeq))
-    names(state) <- unifSeq
-    #incorporating known states
-    state[as.character(10*round((years-min(years))/10))] <- as.character(x)
-    #filling in unknown states with previous known
-    naStates <- which(is.na(state))
-    for (j in naStates) {
-        state[j] <- state[j-1]
-    }
-
-    
-    <# adding sequence to list
-    if(length(state)>1) {
-        tmpMat <- seqMatrixBlank
-        tmpMat[rownames(state), colnames(state)] <- state
-        seqMatrix <- seqMatrix + tmpMat
-        #seqStandState <- c(seqStandState, list(state))
-    }
-    print(i)
-}
-
-transMat <- round(prop.table(seqMatrix, margin = 1), 5)
+# require(ggplot2)
+# 
+# ggplot(data = transDF, aes(x = year, y = prop, colour = postFireCls, linetype = coverType)) +
+#     geom_line() +
+#     #stat_summary(fun.data = "mean_sdl", geom = "smooth") +
+#     facet_grid(subZone ~ preFireCls) 
+# 
+# 
+#     
+# ## summarizing 
+# transSummaryDF <- transDF %>% 
+#     group_by(coverType, subZone, year) %>%
+#     summarise(accident = sum(cellCount[which(postFireCls == "[0,50)")]) /
+#                   sum(cellCount[which(postFireCls %in% c("[50,80)", "[80,999]"))]),
+#               maintien = sum(cellCount[which(postFi)]))
+# 
+#     
+# transSummaryDF <- transDF %>% 
+#     group_by(coverType, subZone, preFireCls, postFireCls) %>%
+#     summarise(cellCount = sum(cellCount)) %>%
+#     ungroup() %>%
+#     group_by(coverType, subZone, preFireCls) %>%
+#     mutate(cellCountTotal = sum(cellCount)) %>%
+#     ungroup() %>%
+#     mutate(prop = cellCount/cellCountTotal)
+# 
+# transSummaryDF2 <- transSummaryDF %>%
+#     group_by(coverType, subZone) %>%
+#     summarise(accident = sum(cellCount[which(preFireCls != "[0,50)"&
+#                                                  postFireCls == "[0,50)")])/
+#                   sum(cellCount[which(preFireCls != "[0,50)")]))
+# 
+#     
+# 
+# transSummaryDF2 <- transSummaryDF %>%
+#     group_by(coverType, subZone) %>%
+#     
+#     
+#     
+# 
+# 
+# 
+# 
+#         seqMatrix[[sp]][[sz]] <- list()
+#         globalMatrix[[sp]][[sz]] <- seqMatrixBlank
+#         
+#         for (y in 1:50) {
+# 
+# for (y in seq_along(seqMatrix)) {
+#     df <- round(prop.table(seqMatrix[[y]], margin = 1), 5)  
+#     df <- data.frame(yeardf)
+#     if(y == 1) {
+#       transDf <- df
+#     } else {
+#         transDf <- rbind(transDf, df)
+#     }
+# }
+# seqMatrix
+# 
+# 
+#     #creating standardized sequence
+#     unifSeq <- seq(0, 10*round((max(years)-min(years))/10), by=10)
+#     state <- rep(NA, length(unifSeq))
+#     names(state) <- unifSeq
+#     #incorporating known states
+#     state[as.character(10*round((years-min(years))/10))] <- as.character(x)
+#     #filling in unknown states with previous known
+#     naStates <- which(is.na(state))
+#     for (j in naStates) {
+#         state[j] <- state[j-1]
+#     }
+# 
+#     
+#     <# adding sequence to list
+#     if(length(state)>1) {
+#         tmpMat <- seqMatrixBlank
+#         tmpMat[rownames(state), colnames(state)] <- state
+#         seqMatrix <- seqMatrix + tmpMat
+#         #seqStandState <- c(seqStandState, list(state))
+#     }
+#     print(i)
+# }
+# 
+# transMat <- round(prop.table(seqMatrix, margin = 1), 5)
