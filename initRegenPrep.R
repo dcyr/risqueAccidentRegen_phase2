@@ -22,7 +22,8 @@ require(rgdal)
 ## source("../initRasterPrep.R")
 
 source("../scripts/regenDensityPredictFnc.R")
-source("../scripts/Pothier-Savard.R")
+psDir <- "../data/Pothier-Savard"
+source(paste(psDir, "Pothier-Savard.R", sep = "/"))
 
 ## loading predictive variables for initial conditions, putting them into a data frame
 sDep <- rasterToPoints(surfDep)
@@ -209,74 +210,74 @@ for (i in seq_along(rhoLevels)) {
     
 }
 
-# ##################################################################################
-# ##################################################################################
-# ##################################################################################
-# ## visualizing results, training set vs initial conditions
-# require(ggplot2)
-# ##################################################################################
-# 
-# rhoDist <- data.frame(coverType = ifelse(round(train$cT2), "PG", "EN"),
-#                       surfDep = ifelse(round(train$sD2), "sand",
-#                                        ifelse(round(train$sD3), "till",
-#                                               ifelse(round(train$sD4), "clay",
-#                                                      ifelse(round(train$sD5), "organic",
-#                                                             "shallow")))),
-#                       rho = pep[-naIndex, "rho"],
-#                       group = "train")
-# 
-# 
-# rhoDist <- rbind(rhoDist,
-#                  data.frame(coverType = ifelse(round(df$cT2), "PG",
-#                                                ifelse(round(df$cT3), "F",
-#                                                       ifelse(round(df$cT4), "R",
-#                                                              "EN"))),
-#                             surfDep = ifelse(round(df$sD2), "sand",
-#                                              ifelse(round(df$sD3), "till",
-#                                                     ifelse(round(df$sD4), "clay",
-#                                                            ifelse(round(df$sD5), "organic",
-#                                                                   "shallow")))),
-#                             rho = rhoAttrib,
-#                             group = "test"))
-# 
-# rhoDist[,"ID"] <- as.numeric(as.factor(paste(rhoDist$group, rhoDist$coverType)))
-# 
-# x <- filter(rhoDist, coverType %in% c("EN", "PG"))
-# #x <- filter(rhoDist, coverType %in% c("EN", "PG"), group == "test")
-# 
-# p <- ggplot(x, aes(x = rho, fill = group, colour = group)) +
-#     geom_density(aes(y = ..scaled..), adjust = 1.25, alpha = 0.2) +
-#     facet_wrap(~coverType) +
-#     scale_colour_manual(values = c(train = "darkorange", test = "lightblue")) +
-#     scale_fill_manual(values = c(train = "darkorange", test = "lightblue")) +
-#     labs(title = "Distribution initiale des indices de densité relative à 100 ans (IDR100)",
-#          x = "IDR100")#,
-#          #y = "IDR100\n") #+
-#     #coord_flip()
-# 
-# 
-# png(filename= paste0("relDensDistribution_100.png"),
-#     width = 8, height = 5, units = "in", res = 600, pointsize=8)
-# 
-# 
-# print(p + theme_dark())
-# 
-# dev.off()
-# 
-# ## summary statistics
-# summaryStats <- x %>%
-#     #filter(surfDep == "till") %>%
-#     filter(coverType == "PG") %>%
-#     #group_by(group, coverType) %>%
-#     group_by(group, surfDep) %>%
-#     summarise(IDR100_p05 = quantile(rho, 0.05),
-#               IDR100_p25 = quantile(rho, 0.25),
-#               IDR100_p50 = quantile(rho, 0.5),
-#               IDR100_p75 = quantile(rho, 0.75),
-#               IDR100_p95 = quantile(rho, 0.95),
-#               n = n())
-# as.data.frame(summaryStats)
-# #######################################
+##################################################################################
+##################################################################################
+##################################################################################
+## visualizing results, training set vs initial conditions
+require(ggplot2)
+##################################################################################
+
+rhoDist <- data.frame(coverType = ifelse(round(train$cT2), "PG", "EN"),
+                      surfDep = ifelse(round(train$sD2), "sand",
+                                       ifelse(round(train$sD3), "till",
+                                              ifelse(round(train$sD4), "clay",
+                                                     ifelse(round(train$sD5), "organic",
+                                                            "shallow")))),
+                      rho = pep[-naIndex, "rho"],
+                      group = "train")
+
+
+rhoDist <- rbind(rhoDist,
+                 data.frame(coverType = ifelse(round(df$cT2), "PG",
+                                               ifelse(round(df$cT3), "F",
+                                                      ifelse(round(df$cT4), "R",
+                                                             "EN"))),
+                            surfDep = ifelse(round(df$sD2), "sand",
+                                             ifelse(round(df$sD3), "till",
+                                                    ifelse(round(df$sD4), "clay",
+                                                           ifelse(round(df$sD5), "organic",
+                                                                  "shallow")))),
+                            rho = rhoAttrib,
+                            group = "test"))
+
+rhoDist[,"ID"] <- as.numeric(as.factor(paste(rhoDist$group, rhoDist$coverType)))
+
+x <- filter(rhoDist, coverType %in% c("EN", "PG"))
+#x <- filter(rhoDist, coverType %in% c("EN", "PG"), group == "test")
+
+p <- ggplot(x, aes(x = rho, fill = group, colour = group)) +
+    geom_density(aes(y = ..scaled..), adjust = 1.25, alpha = 0.2) +
+    facet_wrap(~coverType) +
+    scale_colour_manual(values = c(train = "darkorange", test = "lightblue")) +
+    scale_fill_manual(values = c(train = "darkorange", test = "lightblue")) +
+    labs(title = "Distribution initiale des indices de densité relative à 100 ans (IDR100)",
+         x = "IDR100")#,
+         #y = "IDR100\n") #+
+    #coord_flip()
+
+
+png(filename= paste0("relDensDistribution_100.png"),
+    width = 8, height = 5, units = "in", res = 600, pointsize=8)
+
+
+print(p + theme_dark())
+
+dev.off()
+
+## summary statistics
+summaryStats <- x %>%
+    #filter(surfDep == "till") %>%
+    filter(coverType == "EN") %>%
+    #group_by(group, coverType) %>%
+    group_by(group, surfDep) %>%
+    summarise(IDR100_p05 = quantile(rho, 0.05),
+              IDR100_p25 = quantile(rho, 0.25),
+              IDR100_p50 = quantile(rho, 0.5),
+              IDR100_p75 = quantile(rho, 0.75),
+              IDR100_p95 = quantile(rho, 0.95),
+              n = n())
+as.data.frame(summaryStats)
+#######################################
 
 
 #### creating raster for IDR100 (relative density at 100 y-old)

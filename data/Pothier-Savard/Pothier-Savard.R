@@ -1,11 +1,22 @@
+################################################################################
+################################################################################
+#### Loading parameter tables
+rhoTable <- read.csv(paste(psDir, "rho.csv", sep = "/"))
+tTable <- read.csv(paste(psDir, "Ac.csv", sep = "/"))
+rho100Table <- read.csv(paste(psDir, "rho100ToRho.csv", sep = "/"))
+scenesTable <- read.csv(paste(psDir, "scenescence.csv", sep = "/"))
+HdTable <- read.csv(paste(psDir, "Hd.csv", sep = "/"))
+DqTable <-  read.csv(paste(psDir, "Dq.csv", sep = "/"))
+GTable <- read.csv(paste(psDir, "G.csv", sep = "/"))
+VTable <- read.csv(paste(psDir, "V.csv", sep = "/"))
 
-###################################################
-###################################################
+
+################################################################################
+################################################################################
 ### establishing relative density (rho) as a function of stem density and quadratic mean diameter
 ### Pothier-Savard 1998, p.38, Tab. 5
-rhoTable <- read.csv("../data/Pothier-Savard/rho.csv")
-rhoCoef <- list()
 
+rhoCoef <- list()
 
 for(i in 1:nrow(rhoTable)) {
     sp <-  as.character(rhoTable[i,"X"])
@@ -34,12 +45,11 @@ rhoFnc <- function(sp, N, Dq, rhoCoef) {
     return(x)
 }
 
-###################################################
-###################################################
+################################################################################
+################################################################################
 ### number of years necessary to grow to 1 m (Ac)
 ### Pothier-Savard 1998, p.36, Tab. 3
 
-tTable <- read.csv("../data/Pothier-Savard/Ac.csv")
 tCoef <- list()
 
 for(i in 1:nrow(tTable)) {
@@ -85,16 +95,12 @@ tFnc <- function(sp, iqs, tCoef) {
 # 
 # dev.off()
 
-###################################################
-###################################################
+################################################################################
+################################################################################
 ### relative density at 100 years-old (rho100) to relative density (rho)
 ### Pothier-Savard 1998, p.25, eq. 11
 
-rho100Table <- read.csv("../data/Pothier-Savard/rho100ToRho.csv")
-scenesTable <- read.csv("../data/Pothier-Savard/scenescence.csv")
-rho100Coef <- list()
-scenesCoef <- list()
-
+rho100Coef <- scenesCoef <- list()
 for(i in 1:nrow(rho100Table)) {
     sp <-  as.character(rho100Table[i,"X"])
     if(sp %in% c("EN", "PG")) {
@@ -202,12 +208,12 @@ rho100ToRhoFnc <- function(rho100, sp, Ac, iqs, rho100Coef, scenesCoef = NULL, w
 # 
 # dev.off()
 
-###################################################
-###################################################
+################################################################################
+################################################################################
 ### Dominant height (Hd)
 ### Pothier-Savard 1998, p.39, Tab. 6
 
-HdTable <- read.csv("../data/Pothier-Savard/Hd.csv")
+
 HdCoef <- list()
 
 for(i in 1:nrow(HdTable)) {
@@ -272,12 +278,12 @@ HdFnc <- function(sp, Ac, iqs, HdCoef) {
 # dev.off()
 
 
-###################################################
-###################################################
+################################################################################
+################################################################################
 ### Quadratic mean diameter (Dq)
 ### Pothier-Savard 1998, p.40, Tab. 7
 
-DqTable <- read.csv("../data/Pothier-Savard/Dq.csv")
+
 DqCoef <- list()
 
 for(i in 1:nrow(DqTable)) {
@@ -364,12 +370,11 @@ DqFnc <- function(sp, Ac, iqs, rho100,
 # dev.off()
 
 
-###################################################
-###################################################
+################################################################################
+################################################################################
 ### Basal area (sq-m/ha, merchantable)
 ### Pothier-Savard 1998, p.41, Tab. 8
 
-GTable <- read.csv("../data/Pothier-Savard/G.csv")
 GCoef <- list()
 
 for(i in 1:nrow(GTable)) {
@@ -472,12 +477,10 @@ GFnc <- function(sp, Ac, iqs, rho100,
 # dev.off()
 
 
-###################################################
-###################################################
+################################################################################
+################################################################################
 ### Merchandable volume
 ### Pothier-Savard 1998, p.41, Tab. 8
-
-VTable <- read.csv("../data/Pothier-Savard/V.csv")
 
 VCoef <- list()
 for(i in 1:nrow(VTable)) {

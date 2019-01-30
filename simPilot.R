@@ -20,6 +20,7 @@ require(dplyr)
 ###Preparing initial conditions, 
 ########## RUN FIRST - RUN FIRST - RUN FIRST - RUN FIRST ##########
 print(paste0("Preparing INITIAL CONDITIONS: ", normalizePath("../"), "initRasterPrep.R"))
+##
 source("../initRasterPrep.R")
 source("../initRegenPrep.R")
 ## Reading management scenarios
@@ -34,7 +35,9 @@ write.csv(fireRegime, file = "fireRegime_baseline.csv", row.names = F)
 ## Loading regeneration module
 source("../scripts/regenDensityPredictFnc.R")
 ## Loading yield curves (and other forestry equations)
-source("../scripts/Pothier-Savard.R")
+psDir <- "../data/Pothier-Savard"
+source(paste(psDir, "Pothier-Savard.R", sep = "/"))
+
 
 ####################################################################################################
 ####################################################################################################

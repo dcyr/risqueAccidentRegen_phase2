@@ -15,7 +15,18 @@ comSpp <- list(SEPM = c("EN", "PG", "R"))
 comSppId <- lapply(comSpp, function(x) coverTypes_RAT[which(coverTypes_RAT$value %in% x),"ID"])
 spMaturity <- c(EN = 90, PG = 76, F = NA, R = 90) # commercial maturity of each species
 spMaturity <- spMaturity[coverTypes_RAT[match(names(spMaturity), names(spMaturity)), "ID"]]
-spvolMin <- c(EN = 50, PG = 50, F = NA, R = 50) # minimum expected volume to be considered as commercial (in cubic-meters)
+
+
+########################################
+########################################
+########################################
+spvolMin <- c(EN = 0, PG = 0, F = NA, R = 0) # minimum expected volume to be considered as commercial (in cubic-meters)
+########################################
+########################################
+########################################
+
+
+
 spAgeRef <- c(EN = 120, PG = 120, F = NA, R = 120) # age at which minimum volume must be achieved
 names(spMaturity) <- 1:length(spMaturity)
 

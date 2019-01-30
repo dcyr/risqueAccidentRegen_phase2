@@ -22,7 +22,8 @@ require(raster)
 require(dplyr)
 ####################################################################
 #### Sourcing Pothier-Savard equations
-source("../scripts/Pothier-Savard.R")
+psDir <- "../data/Pothier-Savard"
+source(paste(psDir, "Pothier-Savard.R", sep = "/"))
 
 studyArea <- raster("../studyArea.tif")
 coverTypes <- raster("../coverTypes.tif")
@@ -123,6 +124,45 @@ outputCompiled <- foreach(i = seq_along(x), .combine = "rbind") %dopar% {
     s <- scenario
     # s <- scenario[i]
     r <- replicates[i]
+    
+    ## computing initial volume at 120 y. old, only once
+    if (i == 1) {
+        ## fetching outputs
+        rho100 <- raster("../IDR100.tif")
+        rho100[rho100>1] <- 1
+        
+        ## focusing on commercial species
+        rho100[is.na(spEligible)] <- NA
+        index <- which(complete.cases(values(rho100)))
+        volAt120 <- rho100
+        volAt120[] <- NA
+        ## compiling relative density at 100 y-old species and subzones
+        out <- as.data.frame(values(rho100))
+        rm(rho100)
+        vals <- colnames(out)    
+        out <- cbind(ctVal, iqsVal, szVal, t1Val, out)
+        out <- melt(out, measure.vars = vals)
+        
+        index <- which(complete.cases(out))
+        out <- out[index,]
+        ## compute volume at 120 y-old
+        out <- out %>%
+            mutate(volAt120 = VFnc(sp = coverTypes_RAT[match(ctVal, coverTypes_RAT$ID), "value"],
+                                   iqs = iqsVal,
+                                   Ac = 120 - t1Val,
+                                   rho100 = value,
+                                   HdCoef = HdCoef, GCoef = GCoef, DqCoef = DqCoef, VCoef = VCoef,
+                                   rho100Coef = rho100Coef, merchantable = T,
+                                   scenesCoef = NULL, withSenescence = F)) %>%
+            mutate(volAt120 = ifelse(is.na(volAt120), 0, volAt120)) %>%
+            mutate(volAt120Cls =  cut(volAt120, include.lowest = T, right = F, breaks=c(0,50, 80, 999)))
+        
+        volAt120[index] <- out$volAt120
+        writeRaster(volAt120, file = "volAt120_init.tif")
+        
+    
+    }
+    
     
     ## fetching outputs
     rho100 <- get(load(paste(outputFolder, x[i], sep="/")))

@@ -47,9 +47,8 @@ spatialExtent <- raster(spatialExtent, resolution = 500, crs = projection(studyA
 fireZonesP <- crop(fireZonesP, spatialExtent)
 lakesP <- crop(lakesP, spatialExtent)
 save(fireZonesP, file = "fireZonesP.RData")
-write.csv(fireZones_RAT, file = "fireZones_RAT.csv", row.names = F)
 
-# 'rasterizing' fireZones, study area (+ subzones) and lakes
+### 'rasterizing' fireZones, study area (+ subzones) and lakes
 
 # fireZones
 fireZones <- rasterize(fireZonesP, spatialExtent)
@@ -68,7 +67,9 @@ studyAreaInExRAT <- distinct(as.data.frame(studyAreaP$INC_CO_EXC))
 studyAreaInExRAT <- data.frame(ID = match(studyAreaInExRAT$`studyAreaP$INC_CO_EXC`, levels(studyAreaP$INC_CO_EXC)),
                                InEx = studyAreaInExRAT$`studyAreaP$INC_CO_EXC`)
 
-
+###
+write.csv(merge(studyAreaInExRAT, read.csv("../data/subZones_RAT.csv")),
+          file = "subZone_RAT.csv", row.names = F)
 
 
 ###
@@ -174,10 +175,7 @@ print(p + theme(plot.title = element_text(size = rel(0.6)),
                 axis.text.x = element_text(size = rel(0.5)),
                 axis.text.y =  element_text(size = rel(0.5), angle = 90, hjust = 0.5),
                 legend.title = element_text(size = rel(0.75)),
-                legend.text = element_text(size = rel(0.55))))# +
-# annotate("text", x = max(coverTypes$x), y = max(coverTypes$y),
-#          label = coverTypesSummary,
-#          hjust = 1, vjust = 0, size = 0.3*pointsize, fontface = 2))
+                legend.text = element_text(size = rel(0.55))))
 
 dev.off()
 
