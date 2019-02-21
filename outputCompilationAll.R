@@ -3,10 +3,10 @@
 ##### Visualizing everything
 ##### Dominic Cyr, in collaboration with Tadeusz Splawinski, Sylvie Gauthier, and Jesus Pascual Puigdevall
 rm(list = ls())
-setwd("D:/regenFailureRiskAssessmentData_phase2/2019-01-07_coupe0.62_recup70_noMinVol")
+setwd("D:/regenFailureRiskAssessmentData_phase2/2019-02-20_coupe0.69_avecContrainteAge")
 # setwd("~/Sync/Travail/ECCC/regenFailureRiskAssessment_phase2/2018-11-29")
 ####################################################################################################
-scenario <- "coupe0.62_recup70_noMinVol"
+scenario <- "coupe0.69_avecContrainteAge"
 ####################################################################################################
 sourceDir <- path.expand("~")
 sourceDir <- gsub("/Documents", "", sourceDir) # necessary on my Windows machine
